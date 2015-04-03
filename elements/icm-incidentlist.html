@@ -1,0 +1,138 @@
+<link rel="import" href="../bower_components/sortable-table/sortable-table.html">
+
+<polymer-element name="icm-incidentlist" attributes='core'>
+<template>
+    <style>
+
+    </style>
+    
+    <sortable-table id="table"
+    	class="default"	
+    	data="{{incidents}}"
+    	selected="{{selected}}"
+    	rowSelection="true"
+    	multiSelect="false"
+    	sortColumn="date"
+    	rowTemplate="row"
+		rowEditorTemplate="editor"
+		>
+		<sortable-column name="icon"> . </sortable-column>
+		<sortable-column name="name">Name</sortable-column>
+		<sortable-column name="status">Status</sortable-column>
+		<sortable-column name="date">date</sortable-column>
+		<sortable-column name="type">Type</sortable-column>
+		<sortable-column name="items">Items</sortable-column>
+		<sortable-column name="lastedit">Lastedit</sortable-column>
+	
+		<template id="row">
+			<td style="width:7%;">
+				<core-icon-button icon="arrow-forward"></core-icon-button>
+				<core-icon-button icon="create"></core-icon-button>
+			</td>
+			<td style="width:20%;">{{record.row.name}}</td>
+			<td style="width:10%;">{{record.row.status}}</td>
+			<td style="width:20%;">{{record.row.date}}</td>
+			<td style="width:20%;">{{record.row.type}}</td>
+			<td style="width:5%;">{{record.row.items}}</td>
+			<td style="width:20%;">{{record.row.lastedit}}</td>
+		</template>
+		<template id="editor">
+		<td>
+			<div class="form-group has-success has-feedback">
+				<input type="text" class="form-control" value="{{record.row.name}}">
+				<span class="form-control-feedback" style="vertical-align:top;">
+					<button class="btn btn-primary" on-click="{{closeEdit}}" disabled?="{{!editChanged}}" title="Done">&#10004;</button>
+					<button class="btn btn-primary" on-click="{{undoEdit}}" hidden?="{{!editChanged}}" title="Undo">&#10227;</button>
+					<button class="btn btn-primary" on-click="{{cancelEdit}}" hidden?="{{editChanged}}" title="Cancel">&#10008;</button>
+				</span>
+			</div>
+		</td>
+		<td horizontal layout>
+			<div flex horizontal layout center class="form-group">
+				<select value="{{record.row.name}}" class="form-control">
+					<option></option>
+					<option value="active">Actief</option>
+					<option value="planned">Gepland</option>
+					<option value="closed">Gesloten</option>
+				</select>
+			</div>
+		</td>
+		<td>{{record.row.date}}</td>
+		<td horizontal layout>
+			<div flex horizontal layout center class="form-group">
+				<select value="{{record.row.type}}" class="form-control">
+					<option></option>
+					<option value="live">Live</option>
+					<option value="drill">Oefening</option>
+				</select>
+			</div>
+		</td>
+		<td>{{record.row.items}}</td>
+		<td>{{record.row.lastedit}}</td>
+		</template>
+		</sortable-table>
+    <!--
+	<template repeat="{{i,idx in incidents}}">
+		<div on-click="{{select}}" index="{{idx}}"> {{i}} {{i | date}} <div>
+    </template>
+    -->
+</template>
+
+<script>
+Polymer({
+	created: function(){
+		this.incidents = [];
+	},
+	domReady: function(){
+		var self = this;
+		var core = this.core;
+		function lastedit(d){
+			var items = d.items();
+			if (items.length > 0)
+				return new Date(_.max(items, function(x){ return x.updated(); }).updated()).toLocaleString();
+			else
+				return new Date(d.updated()).toLocaleString();
+		}
+		function reload(){
+			self.incidents = [];
+			core.projects()
+				.filter(function(d){return !d.deleted();})
+				.forEach(function(d){
+					self.incidents.push(
+						{
+						id: d.id(),
+						name:d.data('name') ? d.data('name'): 'unknown', 
+						status:d.data('status') ? d.data('status').name: 'unknown', 
+						date:new Date(d.created()).toLocaleString(),
+						type:d.data('type') ? d.data('type').title: 'unknown',
+						items:d.items().length,
+						lastedit:lastedit(d)
+						}
+					);
+				});
+		}
+		core.projectStore().loaded.then(function(d){
+			reload();
+		});
+		core.projectStore().on('datachange', function(d){
+			reload();
+		});
+	},
+	name: function(d){
+		return d.data('name');
+	},                      
+	date: function(d){
+		return new Date(d.created()).toLocaleString();
+	},
+	live: function(d){
+		if (d.data('type') && d.data('type').name == 'live') return true;
+	},
+	selectedChanged: function(a,b,c){
+		if (this.selected){
+			this.core.project(this.selected.id.toString());
+			this.fire('selected');
+		}
+	}
+});
+</script>
+</polymer-element>

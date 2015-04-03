@@ -1,0 +1,99 @@
+<polymer-element name="icm-map" attribute="core">
+<template>
+<link rel="stylesheet" href="../bower_components/leaflet-draw/dist/leaflet.draw.css" />
+<style>
+:host { display: block; overflow: hidden} 
+:host leaflet-map {height:100%	; width:99%; border: none}
+</style>
+<button on-click="{{startedit}}">Draw</button><br>
+<leaflet-map-draw id="map" trackResize="true" latitude="53.10" longitude="5.8" zoom="13">
+<template repeat="{{i in polygons}}">
+	<leaflet-polygon color="{{i.properties.stroke}}" fillColor="{{i.properties.fill}}" opacity="{{i.properties.opacity}}">
+	<template repeat="{{p in i.points}}">
+		<leaflet-point latitude="{{p[1]}}" longitude="{{p[0]}}"> </leaflet-point>
+	</template>
+	</leaflet-polygon>
+</template>
+<template repeat="{{i in lines}}">
+	<leaflet-polyline color="{{i.properties.stroke}}" opacity="{{i.properties.opacity}}">
+	<template repeat="{{p in i.points}}">
+		<leaflet-point latitude="{{p[1]}}" longitude="{{p[0]}}"> </leaflet-point>
+	</template>
+	</leaflet-polyline>
+</template>
+<template repeat="{{p in points}}">
+	<leaflet-marker latitude="{{p.coord[1]}}" longitude="{{p.coord[0]}}" icon="{{p.icon}}"  title="{{p.properties.label}}" opacity="0.6">
+		<b>{{p.properties.label}}</b>
+	</leaflet-marker>
+</template>
+
+<leaflet-polygon color="#f00">
+    <leaflet-point latitude="77.5700" longitude="12.9700"> </leaflet-point>
+    <leaflet-point latitude="77.6034" longitude="13.0001"> </leaflet-point>
+    <leaflet-point latitude="77.6006" longitude="12.9547"> </leaflet-point>
+</leaflet-polygon>
+  
+</leaflet-map-draw>
+</template>
+
+<script>
+var tmp;
+Polymer({
+	projectid: null,
+	observe: {
+		'core._projectid': 'switchProject'
+	},
+	created: function(){
+		this.points = [];
+		this.lines = [];
+		this.polygons = [];
+		this.core = core;
+		//this.$.map.map.invalidateSize();
+	},
+	ready: function(){
+		var self = this;
+	},
+	resize: function(){
+		this.$.map.map.invalidateSize();
+	},
+	switchProject: function(){
+		var items = core.project().items().filter(function(d){
+			return !d.deleted() && d.data('type') == 'feature';
+		});
+		var points = items.filter(function(d){
+				var feature = d.data('feature');
+				return feature.geometry.type == 'Point';
+		});
+		points.forEach(function(d){
+			d.coord = d.data('feature').geometry.coordinates;
+			d.properties = d.data('feature').properties;
+			d.icon = new L.icon({
+				iconUrl: d.data('feature').properties['marker-url'],
+				iconSize: [32, 32],
+				iconAnchor: [16, 16],
+				//popupAnchor: [-3, -76],
+			});
+		});
+		this.points = points;
+		var lines = items.filter(function(d){
+				var feature = d.data('feature');
+				return feature.geometry.type == 'Linestring';
+		});
+		lines.forEach(function(d){
+			d.points = d.data('feature').geometry.coordinates[0];
+			d.properties = d.data('feature').properties;
+		});
+		this.lines = lines;
+		var polygons = items.filter(function(d){
+				var feature = d.data('feature');
+				return feature.geometry.type == 'Polygon';
+		});
+		polygons.forEach(function(d){
+			d.points = d.data('feature').geometry.coordinates[0];
+			d.properties = d.data('feature').properties;
+		});
+		this.polygons = polygons;
+	}
+});
+</script>
+</polymer-element>

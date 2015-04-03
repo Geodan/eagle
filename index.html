@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    
+    <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="bower_components/polymer/polymer.html">
+    
+	<script src="bower_components/proj4/dist/proj4.js"></script>
+    <script src="bower_components/d3/d3.js"></script>
+	<script src="bower_components/d3-plugins/geo/tile/tile.js"></script>
+    <script src="/sites/cow/lib/underscore/underscore-min.js"></script>
+    <script src="/sites/cow/dist/cow.js"></script>
+
+    <script src="../d3.mappu/dist/d3.mappu.js"></script><!-- latest mappu -->
+
+    <link rel="import" href="./elements/icm-main.html">
+    <link rel="stylesheet" href="bower_components/sortable-table/css/bootstrap.css" shim-shadowdom>
+
+    <style>
+    
+    body, html {
+      height: 100%;
+      margin: 0;
+    }
+  
+    body {
+      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+      margin: 0;
+    }
+    
+    icm-main {
+      width: 100%;
+      height: 100%;
+    }
+    
+    @media screen and (max-height: 400px) {
+      body {
+        font-size: 13px;
+      }
+    }
+ 
+    </style>
+ </head> 
+ <body unresolved>
+	<icm-main></icm-main>
+ <!-- move this to dialog<icm-header></icm-header>-->
+ </body>
+
+	
+</html>

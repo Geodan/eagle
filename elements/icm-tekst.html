@@ -1,0 +1,157 @@
+<link rel="import" href="../bower_components/core-collapse/core-collapse.html">
+<link rel="import" href="../bower_components/core-icons/maps-icons.html">
+<link rel="import" href="../bower_components/core-icons/av-icons.html">
+<link rel="import" href="../bower_components/core-icons/editor-icons.html">
+<link rel="import" href="../bower_components/core-icons/communication-icons.html">
+<link rel="import" href="../bower_components/core-icons/notification-icons.html">
+<link rel="import" href="../bower_components/core-icons/av-icons.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../elements/icm-textbox.html">
+
+<polymer-element name="icm-tekst" attributes="core">
+<template>
+<style>
+	.team {
+		background: white;
+		margin-bottom: 5px;
+		padding: 10px;
+		font-size: 16pt;
+	}
+	.icon {
+		width: 24px;
+		height: 24px;
+		color: orange;
+	}
+	
+	
+</style>
+
+<template repeat="{{team,i in teams}}">
+	<paper-shadow z=2>
+		<div class='team' val="{{i}}" on-click="{{toggle}}" horizontal justified layout>
+			<span>{{team.name}}</span>
+			<core-icon icon="av:new-releases" class="icon" style="display:{{team.recentlyChanged?'block':'none'}}"></core-icon>
+		</div>
+		
+	</paper-shadow>
+	<core-collapse id="no{{i}}" allowOverflow>
+		<div class="collapse-content">
+			<template repeat="{{box in team.boxes}}">
+				<icm-textbox team="{{team}}" box="{{box}}" core="{{core}}" on-said-hello="{{updateme}}"></icm-textbox> 
+			</template><br>
+		</div>
+	</core-collapse>
+</template>
+	
+</template>
+
+
+
+<script>
+
+if (1==2){//so never....
+core.project().data('location',{lat: 53.1, lon: 5.8, zoomlevel: 20}).sync();
+core.project().data('teams',[
+	{id: 1, name: 'Meldingen', boxes: [
+		{id: 1, type: 'text', name: 'Acute meldingen'},
+		{id: 2, type: 'text', name: 'Tijdlijn'},
+		{id: 3, type: 'text', name: 'Meldingen view'},
+		{id: 4, type: 'text', name: 'Situatie Plaats Incident'},
+		{id: 5, type: 'text', name: 'Genomen acties'}
+	]},
+	{id: 2, name: 'Operationeel (WAT)', boxes: [
+		{id: 1, type: 'text', name: 'Knelpunten'},
+		{id: 2, type: 'text', name: 'Tijdlijn'},
+		{id: 3, type: 'text', name: 'Beeldvorming'},
+		{id: 4, type: 'text', name: 'Oordeelvorming'},
+		{id: 5, type: 'text', name: 'Besluitvorming'},
+		{id: 6, type: 'text', name: 'Acties/Maatregelen'},
+		{id: 7, type: 'text', name: 'Veiligheid medewerkers'},
+		{id: 8, type: 'text', name: 'Prognose'}
+	]},
+	{id: 3, name: 'Tactisch (WOT)', boxes: [
+		{id: 1, type: 'text', name: 'Knelpunten'},
+		{id: 2, type: 'text', name: 'Tijdlijn'},
+		{id: 3, type: 'text', name: 'Beeldvorming'},
+		{id: 4, type: 'text', name: 'Oordeelvorming'},
+		{id: 5, type: 'text', name: 'Besluitvorming'},
+		{id: 6, type: 'text', name: 'Acties/Maatregelen'},
+		{id: 8, type: 'text', name: 'Prognose'}
+	]},
+	{id: 4, name: 'Strategisch (WBT)', boxes: [
+		{id: 1, type: 'text', name: 'Knelpunten'},
+		{id: 2, type: 'text', name: 'Tijdlijn'},
+		{id: 3, type: 'text', name: 'Beeldvorming'},
+		{id: 4, type: 'text', name: 'Oordeelvorming'},
+		{id: 5, type: 'text', name: 'Besluitvorming'},
+		{id: 6, type: 'text', name: 'Acties/Maatregelen'},
+		{id: 8, type: 'text', name: 'Prognose'}
+	]},
+	{id: 5, name: 'Maatregelen', boxes: [
+		{id: 1, type: 'text', name: 'Meest waarschijnlijk'},
+		{id: 2, type: 'text', name: 'Minder waarschijnlijk'},
+		{id: 3, type: 'text', name: 'Minst waarschijnlijk'}
+	]},
+	{id: 6, name: 'Communicatie', boxes: [
+		{id: 1, type: 'text', name: 'Kernboodschap'},
+		{id: 2, type: 'text', name: 'Omgevingsbeeld'},
+		{id: 3, type: 'text', name: 'Communicatie vanuit het waterschap'},
+		{id: 4, type: 'text', name: 'Communicatie intern het waterschap'}
+	]}
+]).sync(); 
+}
+Polymer({
+	reftime: new Date().getTime(),
+	recentlyChanged: false,
+	projectid: null,
+	observe: {
+		'core._projectid': 'switchProject'
+	},
+	ready: function(){
+		var self = this;
+		this.teams = [];
+	},
+	domReady: function(){
+		var self = this;
+		this.project = this.core.project();
+		/*
+		var update = function(){
+			var self = this;
+			var reftime = self.core.project().reftime; //How to decide on reftime?
+			//Get the number of new items since last opening the screen
+			var items = this.core.project().items().filter(function(d){
+				return d.data('type') == 'text' 
+					&& d.data('team') == team.id 
+					&& d.updated() > reftime;
+			});
+			this.newitems = items.length;
+		}
+		this.project.itemStore().on('datachange', update);
+		*/
+	},
+	switchProject: function(){
+		var self = this;
+		if (this.core.project()){
+			this.teams = this.core.project().data('teams');
+		}
+	},
+	toggle: function(e, b,c){
+		//TODO: there must be a nicer way to get this done..
+		var val = e.target.getAttribute('val');
+		this.shadowRoot.getElementById('no'+val).toggle();
+		this.core.project().reftime = new Date().getTime();
+		
+		//TODO: aaaarg.... make some nice code please
+		this.teams.forEach(function(d){
+			if (d.id == parseInt(val) + 1)
+				d.recentlyChanged = false;
+		});
+	},
+	updateme: function(a,b,c){
+		c.team.recentlyChanged = true;
+	}
+	
+});
+</script>
+
+</polymer-element>

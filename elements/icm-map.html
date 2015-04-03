@@ -1,0 +1,208 @@
+<link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-zoommenu.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-mapvectorlayer.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-maprasterlayer.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-map.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-drawingmenu.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-layermanager.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-layercatalogus.html">
+
+<polymer-element name="icm-map" attributes="core account">
+<template>
+
+<style>
+g-map {
+  height: 100%;
+  position: relative;
+}
+g-layermanager {
+  display: block;
+  position: absolute;
+  left: 10%;
+  top: 50px;
+  width: 400px;
+  z-index: 102;
+}
+/*
+g-layercatalogus {
+  display: block;
+  position: absolute;
+  right: 10px;
+  top: 50px;
+  width: 400px;
+  z-index: 101;
+}*/
+g-drawingmenu {
+  display: block;
+  position: absolute;
+  margin-left: 10px;
+  bottom: 10px;
+  width: 200px;
+  z-index: 101;
+}
+g-zoommenu{
+  display: block;
+  position: absolute;
+  margin-left: 10px;
+  margin-top: 10px;
+  top: 0px;
+  width: 200px;
+  z-index: 101;
+}
+</style>
+<g-zoommenu id="zoommenu" map="{{map}}"></g-zoommenu>
+<g-drawingmenu id="drawmenu" map="{{map}}"></g-drawingmenu>
+<g-layermanager id="layermngr" map="{{map}}" layers="{{layers}}"></g-layermanager>
+<paper-action-dialog  class="scrolling"  id="layerlist" transition="core-transition-right" heading="Beschikbare lagen">
+	<g-layercatalogus id="layercatalogus" mapType="d3.mappu" activeLayers="{{layers}}" account="{{account}}" filters="{{filters}}"></g-layercatalogus>
+</paper-action-dialog>
+<g-map id="mapelement" latitude="52.2" longitude="5.2" zoomlevel="23">
+		<g-maprasterlayer 
+			id="Mapbox"
+			type="tms"
+			url="http://{s}.tiles.mapbox.com/v3/examples.map-i86nkdio/{z}/{x}/{y}.png"
+		></g-maprasterlayer>
+		<g-mapvectorlayer id="communication" name="Communication"></g-mapvectorlayer>
+</g-map>
+
+</template>
+
+<script>
+var tmp;
+Polymer({
+	projectid: null,
+	zoom: null,
+	observe: {
+		'core._projectid': 'switchProject'
+	},
+	created: function(){
+		this.points = [];
+		this.lines = [];
+		this.polygons = [];
+		this.core = {};
+	},
+	ready: function(){
+		this.layers = [];
+        this.filters = [];
+        this.account = {};
+        this.activeLayers = [];
+	},
+	domReady: function(){
+		var core = this.core;
+		this.map = this.$.mapelement.map;
+		tmp = this.map;
+
+		this.$.communication.addEventListener('featchanged', function(d){
+			var feat = d.detail;
+			var id = feat.id;
+			var item = core.project().items(id);
+			item.data('feature',feat).sync();
+		});
+		this.map.mapdiv.addEventListener('featureCreated', function(e){
+			var item = core.project().items({});
+			item.data('type', 'feature');
+			item.data('feature', e.detail);
+			item.sync(); 
+		});
+		this.map.mapdiv.addEventListener('featureChanged', function(e){
+			var id = e.detail.id;
+			if (id){
+				var item = core.project().items(id.toString());
+				item.data('feature', e.detail);
+				item.sync(); 
+			} 
+			else {
+				console.warn('No id for feature given');
+			}
+		});
+		this.map.mapdiv.addEventListener('featureRemoved', function(e){
+			var id = e.detail.id;
+			if (id){
+				var item = core.project().items(id.toString());
+				item.deleted(true);
+				item.sync(); 
+			}
+			else {
+				console.warn('No id for feature given');
+			}
+		});
+	},
+	resize: function(){
+		this.map.resize();
+	},
+	switchProject: function(){
+		var self = this;
+		var core = this.core;
+		window.setTimeout(function(){ //FIXME
+			self.$.mapelement.resize();
+			self.map = self.$.mapelement.map;
+			//self.layers = self.$.mapelement.map.layers.filter(function(d){return d.type == 'vector'});
+			var location = core.project().data('location');
+			if (location){
+				self.map.zoom = location.zoomlevel;
+				self.map.center = [location.lon, location.lat];
+			}
+			self.$.drawmenu.setLayer(self.$.communication.layer);
+		},100);
+		this.reload();
+		core.project().itemStore().on('datachange', function(d){
+			self.reload();
+		})
+	},
+	reload: function(){
+		var core = this.core;
+				//Get all the features from the project and add them to corresponding layers
+		var items = core.project().items().filter(function(d){
+			return !d.deleted() && d.data('type') == 'feature';
+		});
+
+		var feats = [];
+		
+		var polygons = items.filter(function(d){
+				var feature = d.data('feature');
+				return feature.geometry.type == 'Polygon';
+		});
+		polygons.forEach(function(d){
+			var feat = d.data('feature');
+			feat.id = d.id();
+			if (!feat.style){
+				feat.style = feat.properties;
+			}
+			feats.push(feat);
+		});
+		
+		var lines = items.filter(function(d){
+				var feature = d.data('feature');
+				return feature.geometry.type == 'LineString';
+		});
+		lines.forEach(function(d){
+			var feat = d.data('feature');
+			feat.id = d.id();
+			if (!feat.style){
+				feat.style = feat.properties;
+			}
+			feats.push(feat);
+		});
+		
+		var points = items.filter(function(d){
+				var feature = d.data('feature');
+				return feature.geometry.type == 'Point';
+		});
+		points.forEach(function(d){
+			var feat = d.data('feature');
+			feat.id = d.id();
+			if (!feat.style){
+				feat.style = feat.properties;
+			}
+			feats.push(feat);
+		});
+		
+		this.$.communication.newdata(feats);
+	},
+	toggleLayerCatalog: function(){
+		this.$.layerlist.toggle();
+	}
+		
+});
+</script>
+</polymer-element>

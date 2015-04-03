@@ -1,0 +1,28 @@
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<polymer-element name="icm-plugin" attributes="core map">
+<template>
+	<style>
+	</style>
+	<paper-toggle-button on-change="{{toggle}}"></paper-toggle-button>
+	<div id="main" disabled>
+		<content></content>
+	</div>
+</template>
+
+
+
+<script>
+
+Polymer({
+	ready: function(){
+	},
+	domReady: function(){
+		this.project = this.core.project();
+	},
+	toggle: function(){
+		
+	}
+});
+</script>
+
+</polymer-element>

@@ -1,0 +1,63 @@
+<polymer-element name="icm-core" attributes="herdname protocol ip port directory core">
+<template>
+    <style>
+
+    </style>
+</template>
+
+<script>
+Polymer({
+	connected: false,
+	herdname: 'ontw',
+	protocol: 'wss',
+	url: 'websocket.geodan.nl',
+	port: 443,
+	directory: 'ontw',
+	created: function(){
+	},
+	observe: {
+		'core._websocket._connected': 'dothis'
+	},
+	dothis: function(){
+		//TODO: make this nicer
+		this.connected = this.core._websocket._connected;
+	},
+	ready: function(){
+		this.me = {};
+		var core = new Cow.core({
+				herdname: this.herdname
+		});
+		core.socketservers({
+			  _id: 'default',
+			  data: {protocol: this.protocol, ip: this.url, port: this.port, dir: this.directory}
+		});
+		core.socketserver('default');
+		//FIXME: temporary force same user at startup, no cloud login needed
+		core.user('tom.van.tilburg@geodan.nl');
+		core.connect();
+		this.core = core;
+	},
+	toggleConnection: function(){
+		if (this.connected){
+			this.core.websocket().disconnect();
+		}
+		else {
+			this.core.connect();
+		}
+	},
+	login: function(account){
+		if (account){
+			if (!this.core.user(account.ID.toString())){
+				//user doesn't exist in cow yet, create
+				this.core.users({_id:account.ID, data: {name: account.FirstName + ' - ' + account.Organisation}}).sync();
+			}
+			this.me = this.core.user(account.ID.toString());
+		}
+		else {
+			console.warn('No user id given to login');
+		}
+	}
+	
+});
+</script>
+</polymer-element>
