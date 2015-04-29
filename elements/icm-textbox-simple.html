@@ -1,35 +1,3 @@
-<!--
-Possible solution for contenteditable
-http://stackoverflow.com/questions/26970999/contenteditable-inside-polymer-element
-
-<polymer-element name="editable-div">
-  <script>
-  Polymer({
-    ready: function() {
-        var sroot = this.$;
-        var nodes = sroot.mycontent.getDistributedNodes();
-        [].forEach.call(nodes, function(node) {
-            sroot.editableportion.appendChild(node);
-        });
-    },
-    blur: function () {
-      console.log('blur');
-    },
-    click: function () {
-      console.log('click');
-    },
-    focus: function () {
-      console.log('focus');
-    }
-  });
-  </script>
-  <template>
-    <div contenteditable="true" on-click="{{click}}" on-blur="{{blur}}" on-focus={{focus}} id="editableportion">
-    </div>
-    <content id="mycontent"></content>
-  </template>
-</polymer-element>
--->
 <link rel="import" href="../bower_components/core-collapse/core-collapse.html">
 <link rel="import" href="../bower_components/core-icons/maps-icons.html">
 <link rel="import" href="../bower_components/core-icons/av-icons.html">
@@ -38,6 +6,7 @@ http://stackoverflow.com/questions/26970999/contenteditable-inside-polymer-eleme
 <link rel="import" href="../bower_components/core-icons/notification-icons.html">
 <link rel="import" href="../bower_components/core-icons/av-icons.html">
 <link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
 <link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
@@ -46,12 +15,21 @@ http://stackoverflow.com/questions/26970999/contenteditable-inside-polymer-eleme
 <template>
 
 <style>
-	#flashbacktext {
+	#text {
 		display: block;
 		background: white;
 		padding-left: 10px;
 		padding-right: 10px;
 		cursor: pointer;
+		min-height: 20px;
+	}
+	#viewtext {
+		display: block;
+		background: white;
+		padding-left: 10px;
+		padding-right: 10px;
+		cursor: pointer;
+		min-height: 20px;
 	}
 	#textarea {
 		display: none;
@@ -64,7 +42,12 @@ http://stackoverflow.com/questions/26970999/contenteditable-inside-polymer-eleme
 		font-size: 12pt;
 		padding: 5px;
 	}
-	
+	paper-toast {
+	  right: 10px;
+	  top: auto;
+	  bottom: 20px;
+	  left: auto;
+	} 
 	paper-button {
 		font-size: 8pt;
 	}
@@ -86,25 +69,29 @@ http://stackoverflow.com/questions/26970999/contenteditable-inside-polymer-eleme
     	height: 16px;
     	color: orange;
     }
+    
+    .location {
+    	cursor: pointer;
+    	text-decoration: underline;
+    	color: orange;
+    }
+    
+    .mention {
+    	cursor: pointer;
+    	text-decoration: underline;
+    	color: blue;
+    }
 	
 </style>
+<paper-toast id="toast" text="Sorry, deze plek is niet gevonden."></paper-toast>
 <div class='header' style="color:{{dirty?'orange':'black'}}" on-mouseover="{{setSeen}}"><b>{{box.name}}</b>
 	<span horizontal layout>
 		<core-icon icon="av:new-releases" class="smallicon" style="display:{{recentlyChanged?'block':'none'}}"></core-icon>
 		<div style="display:{{itemtime?'block':'none'}}"><small>Bewerking om {{itemtime}} door: {{editor}}</small></div>
 	</span>
-	<!--
-	<paper-input-decorator>
-	<select id="flashback" on-change="{{flashback}}">
-		<template repeat="{{delta, idx in deltas}}">
-			<option selected="{{idx == deltas.length}}" value="{{delta.timestamp}}">{{delta | deltatime}}</option>
-		</template>
-	</select>
-	</paper-input-decorator>
-	-->
 </div>
 
-<div id="flashbacktext" on-click="{{startEdit}}"><small style="color: lightGray">Klik hier om tekst toe te voegen...</small></div>
+<div id="viewtext" on-click="{{startEdit}}"><small>{{text}}</small></div>
 
 <div id="textarea">
 	<paper-input-decorator>
@@ -134,15 +121,11 @@ this is a working concept but it can be written in a lot less complex way
 */
 Polymer({
 	name: null,
-	text: null,
-	flashbacktext: null,
+	text: 'Klik hier om tekst toe te voegen...',
 	dirty: false, //edited but not saved
 	recentlyChanged: false, //changed from outside since last view
 	editor: null,
 	itemtime: null,
-	layout: function(){
-		return 'flups';
-	},
 	build: function(){
 		var self = this;
 		var core = this.core;
@@ -162,7 +145,7 @@ Polymer({
 			//Some discussion going on about size update here: https://github.com/Polymer/paper-input/issues/118
 			this.$.text.value = text;
 			this.$.a1.update(this.$.text);
-			this.flashbacktext = text;
+			this.text = text;
 			this.itemtime = new Date(this.item.updated()).toLocaleTimeString();
 			//TODO: there should always be a delta, or is the item not synced yet? find out why there can be no delta here
 			if (this.deltas.length > 0){
@@ -197,7 +180,7 @@ Polymer({
 	startEdit: function(){
 		this.recentlyChanged = false;
 		this.$.textarea.style.display = 'block';
-		this.$.flashbacktext.style.display = 'none';
+		this.$.viewtext.style.display = 'none';
 		this.dirty = true;
 		this.$.editbar.opened = true;
 	},
@@ -207,7 +190,7 @@ Polymer({
 	save: function(){
 		
 		this.$.textarea.style.display = 'none';
-		this.$.flashbacktext.style.display = 'block';
+		this.$.viewtext.style.display = 'block';
 		var core = this.core;
 		this.dirty = false;
 		if (!this.item._id){
@@ -222,44 +205,19 @@ Polymer({
 	cancel: function(){
 		this.$.editbar.opened = false;
 		this.$.textarea.style.display = 'none';
-		this.$.flashbacktext.style.display = 'block';
+		this.$.viewtext.style.display = 'block';
 		this.dirty = false;
-		this.$.text.value = this.item ? this.item.data('text'): null;
+		//this.$.viewtext.value = this.item ? this.item.data('text'): null;
 	},
-	deltatime: function(d){
-		return new Date(d.timestamp).toLocaleTimeString();
-	},
-	flashback: function(){
-		var timestamp = this.$.flashback.value;
-		//if (timestamp == this.item.updated()){
-		//Bug in COW: updated and delta may not have same time (millisec. difference)
-		if (Math.abs(this.item.updated() - timestamp) < 10){
-			this.$.textarea.style.display = 'block';
-			this.$.flashbacktextarea.style.display = 'none';
-		}
-		else {
-			this.$.textarea.style.display = 'none';
-			this.$.flashbacktextarea.style.display = 'block';
-		}
-		this.flashbacktext = this.item.data_on(timestamp).text;
-		this.$.a1.update(this.$.text);
-
-		//var userid = this.item.deltas().filter(function(d){return d.timestamp == timestamp;})[0].userid;
-		//if (userid){
-		//	this.editor = core.users(userid).data('name');
-		//}
-		//else {
-		//	this.editor = 'Anonymous';
-		//}
-	},
-	flashbacktextChanged: function(){
-		this.injectBoundHTML(this.decorate(this.flashbacktext), this.$.flashbacktext);
+	textChanged: function(){
+		//This is needed to make polymer update the DOM in this element
+		this.injectBoundHTML(this.decorate(this.text), this.$.viewtext);
 	},
 	deltasChanged: function(){
 		var core = this.core;
 		if (this.item._id){
 			this.$.text.value = this.item.data('text');
-			this.flashbacktext = this.item.data('text');
+			this.text = this.item.data('text');
 			this.$.a1.update(this.$.text);
 			this.itemtime = new Date(this.item.updated()).toLocaleTimeString();
 			if (this.deltas.length > 0){
@@ -279,12 +237,35 @@ Polymer({
 		}
 		//this.deltas = this.item.deltas();
 	},
-	decorate: function(text){
-		if (text){
-			return text.replace(/(?:\r\n|\r|\n)/g, '<br>');
+	goTo: function(event,y,z){
+		event.stopPropagation();
+		var items = this.core.project().items().filter(function(d){
+			return d.data('type') == 'feature' 
+				&& d.data('feature').properties 
+				&& d.data('feature').properties.name
+				&& d.data('feature').properties.name == event.target.textContent //TODO: not nice way to get text value 
+		});
+		if (items[0]){
+			var coords = items[0].data('feature').geometry.coordinates;
+			this.fire('goto-location',{msg: coords});
 		}
 		else {
-			return "";
+			this.$.toast.show();
+		}
+		
+	},
+	talkTo: function(event){
+		event.stopPropagation();
+		//TODO: work in progress
+	},
+	decorate: function(text){
+		if (text){
+			return text.replace(/(?:\r\n|\r|\n)/g, '<br>') //newlines
+				.replace(/(^#|#)([a-z0-9]+)/gi,'#<span class="location" on-click="{{goTo}} value="$2">$2</span>') //goto locations
+				.replace(/(^@|@)([a-z0-9]+)/gi,'@<span class="mention" on-click="{{talkTo}} value="$2">$2</span>'); //mentions
+		}
+		else {
+			return "Klik hier om text toe te voegen....";
 		}
 	}
 });

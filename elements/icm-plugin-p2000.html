@@ -1,0 +1,244 @@
+<link rel="import" href="../bower_components/core-ajax/core-ajax.html">
+<link rel="import" href="../bower_components/core-list/core-list.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-icons/maps-icons.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="icm-plugin.html">
+
+<polymer-element name="some-thing" attributes="value">
+    <template>
+    	<content></content>
+        <div id="content"></div>
+    </template>
+    <script>
+        Polymer('some-thing', {
+        	valueChanged: function(){
+        		this.injectBoundHTML(this.value, this.$.content);
+        	},
+            domReady: function(){
+                //this.$.content.innerHTML = this.value;
+                this.injectBoundHTML(this.value, this.$.content);
+            }
+        });
+    </script>
+</polymer-element>
+
+<polymer-element name="icm-plugin-p2000" extends="icm-plugin">
+<template>
+	<style>
+	.incidentinfo {
+		padding: 5px;
+		padding-left: 10px;
+		font-size: 8pt;
+		width: 400px;
+	}
+	core-list {
+		height: 600px;
+	}
+	.selected {
+		background: #e2e2ff;
+	}
+	</style>
+	<shadow></shadow>
+	
+	<p>Maak verbinding met het P2000 system en zie live de incident meldingen van Hulpverleners.</p>
+	<p>Verbindingsstatus: {{socketState}}</p>
+	
+	<core-list data="{{locations}}" selection="{{selection}}">
+		<template>
+			<div class="row {{ {selected: selected} | tokenList }}">
+				<core-icon style="color:{{model.properties.dii | getcolor}}" icon="{{model.properties.dii | geticon}}"></core-icon>
+				<some-thing class="incidentinfo" value="{{model.properties.title}}">{{model.properties.time}}</some-thing>
+			</div>
+		</template>
+	</core-list>
+	
+	
+</template>
+
+
+
+<script>
+
+Polymer({
+	socketState: null,
+	ready: function(){
+		this.super();
+		this.layer = {};
+		this.locations = [];
+	},
+	selection: null,
+	domReady: function(){
+		this.super();
+	},
+	getcolor: function(value){
+		switch (value){
+		case 1:
+			return "red";
+		case 2:
+			return "yellow";
+		case 3:
+			return "blue";
+		case 4:
+			return "steelBlue";
+		default: 
+			return "green";
+		}
+	},
+	geticon: function(value){
+		switch (value){
+		case 1:
+			return "social:whatshot";
+		case 2:
+			return "maps:local-hospital";
+		case 3:
+			return "maps:directions-walk";
+		case 4:
+			return "maps:directions-ferry";
+		default: 
+			return "grade";
+		}
+	},
+	toggle: function(e){
+		this.super();
+		if (e.srcElement.checked){ //ON
+			this.enable();
+		}
+		else { //OFF
+			this.socket.close();
+			this.locations = [];
+			this.map.map.removeLayer(this.layer);
+		}
+	},
+	selectionChanged: function(){
+		if (this.selection){
+			this.map.map.center = this.selection.geometry.coordinates;
+			//this.map.map.zoom = 24; //can't zoom while still centering (bug in mappu)
+		}
+		
+	},
+	locationsChanged: function(){
+		var self = this;
+		this.locations.forEach(function(d){
+			self.injectBoundHTML(d.properties.title, self.$[d.id]);
+		});
+	},
+	enable: function(){
+		var self = this;
+		var map = this.map.$.mapelement.map;
+		if (map.mapdiv){
+			this.layer = new d3.mappu.VectorLayer('p2000', {
+					reproject: true,
+					style: {
+						stroke: 'blue',
+						fill: 'red'
+					},
+					events: [{
+						 event: 'mouseover',
+						 action: function(d){
+							var event = d3.mouse(map.mapdiv);
+							d3.select(map.mapdiv).selectAll('.menu').remove();
+							d3.select(map.mapdiv).append('core-overlay').classed('menu', true).classed('dialog', true)
+								.attr('opened','true')
+								.style('position', 'absolute')
+								.style('left', event[0] + 'px')
+								.style('top', event[1] + 'px')
+								.append('div')
+								.html(d.properties.title);
+							
+						 }
+					},{
+						event: 'mouseout',
+						action: function(d){
+							d3.select(map.mapdiv).selectAll('.menu').remove();
+						}
+					}]
+			}).addTo(map);
+			
+			//Using this socket without permission. Better to ask in future.
+			var socket = new WebSocket("ws://monitor.livep2000.nl/A/websocket");
+			this.socket = socket;
+			socket.onopen = function(){
+				//Sending authentication
+				socket.send(JSON.stringify ({"TYP":"ANN","COO":"bd4385a1-9f35-4cfc-b698-33a9850df798","UID":"3075134","COM":6}));
+				self.socketState = socket.readyState;
+			}
+			socket.onerror = function(error){
+				console.warn(error);
+				self.socketState = socket.readyState;
+			}
+			socket.onclose = function(){
+				console.log('Socket closed, readystate: ',socket.readyState);
+				self.socketState = socket.readyState;
+			}
+			socket.onmessage = function(msg){
+				var json = JSON.parse(msg.data);
+				if (json.RAD){
+					//Ask for data
+					socket.send(JSON.stringify({"RAD":{},"FRQ":true,"COM":12,"SPI":0}));
+				}
+				else if (json.length > 0){
+					json.forEach(function(obj){
+						var fill = 'orange';
+						switch(obj.DII){
+						case 1://Brandweer
+							fill = 'red';
+							break;
+						case 2://Ambulance
+							fill = 'yellow';
+							break;
+						case 3://Politie
+							fill = 'blue';
+							break;
+						case 4:
+							fill = 'steelBlue';
+							break;
+						default:
+							fill = 'green';
+							break;
+						}
+						
+						var spi = obj.SPI.toString();
+						var year = spi.substr(0,2);
+						var month = spi.substr(2,2);
+						var day = spi.substr(4,2);
+						var hour = spi.substr(6,2);
+						var minutes = spi.substr(8,2);
+						var seconds = spi.substr(10,2);
+						var time = new Date('20'+year,month-1, day, hour, minutes, seconds);
+						
+						var location = {
+							type: 'Feature',
+							id: 'id'+obj.SPI++,
+							geometry: {
+								type: 'Point',
+								coordinates:[obj.LON,obj.LAT] 
+							},
+							properties: {
+								title: obj.TXT,
+								time: time.toLocaleString(),
+								spi: obj.SPI,
+								dii: obj.DII,
+								rei: obj.REI
+							},
+							style: {
+								fill: fill
+							}
+						};
+						//Only include prio's with a location
+						if (obj.TXT.toLowerCase().indexOf('p') === 0 && obj.LON && obj.LAT){
+							self.locations.push(location);
+						}
+					});
+				}	
+				self.locations.sort(function(a,b){return b.properties.spi - a.properties.spi});
+				self.layer.data = self.locations;
+			}
+		}	
+	}
+});
+</script>
+
+</polymer-element>

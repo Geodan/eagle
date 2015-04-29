@@ -6,14 +6,14 @@
 <link rel="import" href="../bower_components/core-icons/notification-icons.html">
 <link rel="import" href="../bower_components/core-icons/av-icons.html">
 <link rel="import" href="../bower_components/core-icons/social-icons.html">
-<link rel="import" href="../elements/icm-textbox.html">
+<link rel="import" href="../elements/icm-textbox-simple.html">
 
 <polymer-element name="icm-tekst" attributes="core">
 <template>
 <style>
 	.team {
 		background: white;
-		margin-bottom: 5px;
+		margin-bottom: 0px;
 		padding: 10px;
 		font-size: 16pt;
 	}
@@ -37,8 +37,8 @@
 	<core-collapse id="no{{i}}" allowOverflow>
 		<div class="collapse-content">
 			<template repeat="{{box in team.boxes}}">
-				<icm-textbox team="{{team}}" box="{{box}}" core="{{core}}" on-said-hello="{{updateme}}"></icm-textbox> 
-			</template><br>
+				<icm-textbox team="{{team}}" box="{{box}}" core="{{core}}" on-goto-location="{{gotolocation}}" on-said-hello="{{updateme}}"></icm-textbox> 
+			</template>
 		</div>
 	</core-collapse>
 </template>
@@ -150,7 +150,6 @@ Polymer({
 	updateme: function(a,b,c){
 		c.team.recentlyChanged = true;
 	}
-	
 });
 </script>
 

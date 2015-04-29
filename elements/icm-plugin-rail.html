@@ -1,0 +1,268 @@
+<link rel="import" href="../bower_components/core-ajax/core-ajax.html">
+<link rel="import" href="../bower_components/core-list/core-list.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-icons/maps-icons.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="icm-plugin.html">
+<script src="../bower_components/stomp-websocket/lib/stomp.js"></script>
+
+<polymer-element name="icm-plugin-rail" extends="icm-plugin">
+<template>
+	<style>
+	.row {
+		padding: 5px;
+		padding-left: 10px;
+		font-size: 8pt;
+		width: 400px;
+		cursor: pointer;
+	}
+	#trainlist {
+		height: 600px;
+		width: 600px;
+		overflow: auto;
+	}
+	.selected {
+		background: #e2e2ff;
+	}
+	</style>
+	<shadow></shadow>
+	<h2>Trains</h2>
+	<div id="trainlist">
+	</div>
+	<!--
+	<core-list data="{{locations}}" selection="{{selection}}">
+		<template>
+			<div class="row {{ {selected: selected} | tokenList }}">
+				<core-icon style="color:{{model.style.fill}}" icon="maps:directions-train"></core-icon>
+				{{model.properties.number}} - {{model.properties.type}} <i>{{model.properties.speed}}</i><br>
+				{{model.properties.route}} <br>
+				<small><i>{{model.properties.bijz}}</i></small>
+			</div>
+		</template>
+	</core-list>
+	-->
+	
+</template>
+
+
+
+<script>
+
+Polymer({
+	ready: function(){
+		this.super();
+		this.layer = {};
+		this.locations = [];
+		var freq = 10000;
+		this.duration = freq;
+		this.interval = freq;
+		this.treininterval;
+	},
+	selection: null,
+	domReady: function(){
+		this.super();
+	},
+	getcolor: function(value){
+		switch (value){
+		case 1:
+			return "red";
+		case 2:
+			return "yellow";
+		case 3:
+			return "blue";
+		case 4:
+			return "steelBlue";
+		default: 
+			return "green";
+		}
+	},
+	geticon: function(value){
+		switch (value){
+		case 1:
+			return "social:whatshot";
+		case 2:
+			return "maps:local-hospital";
+		case 3:
+			return "maps:directions-walk";
+		case 4:
+			return "maps:directions-ferry";
+		default: 
+			return "grade";
+		}
+	},
+	toggle: function(e){
+		this.super();
+		if (e.srcElement.checked){ //ON
+			this.enable();
+		}
+		else { //OFF
+			this.locations = [];
+			clearInterval(this.treininterval);
+			this.map.map.removeLayer(this.layer);
+			this.map.map.removeLayer(this.spoorvakkenlayer);
+		}
+	},
+	selectionChanged: function(){
+		if (this.selection){
+			this.map.map.center = this.selection.geometry.coordinates;
+			//this.map.map.zoom = 24; //can't zoom while still centering (bug in mappu)
+		}
+		
+	},
+	locationsChanged: function(){
+		var self = this;
+	},
+	enable: function(){
+		var self = this;
+		var map = this.map.$.mapelement.map;
+		if (map.mapdiv){
+			this.spoorvakkenlayer = new d3.mappu.VectorLayer('spoor', {
+				reproject: false,
+				style: {
+					stroke: 'gray',
+					fill: 'none'
+				}
+			}).addTo(map);
+			d3.json('./elements/spoorvakken.geojson', function(e,d){
+					if (e){
+						console.warn(e);
+						return;
+					}
+					var counter = 0;
+					d.features.forEach(function(f){
+							f.id = 'id'+counter++;
+					});
+					self.spoorvakkenlayer.data = d.features;
+			});
+
+			this.layer = new d3.mappu.VectorLayer('trains', {
+				reproject: true,
+				style: {
+					stroke: 'blue',
+					fill: 'red'
+				},
+				events: [{
+				 event: 'mouseover',
+				 action: function(d){
+					var event = d3.mouse(map.mapdiv);
+					d3.select(map.mapdiv).selectAll('.menu').remove();
+					d3.select(map.mapdiv).append('core-overlay').classed('menu', true).classed('dialog', true)
+						.attr('opened','true')
+						.style('position', 'absolute')
+						.style('left', event[0] + 'px')
+						.style('top', event[1] + 'px')
+						.append('div')
+						.html(d.properties.id);
+					
+				 }
+				},{
+				 event: 'mouseout',
+				 action: function(d){
+				 	d3.select(map.mapdiv).selectAll('.menu').remove();
+				 }
+				}]
+			}).addTo(map);
+			var self = this;
+			var treinnummers;
+			d3.csv('./elements/treinnummers.csv', function(e,data){
+				if (e){
+					console.warn(e);
+					return;
+				}
+				treinnummers = d3.map(data, function(d){return d.nummer;});
+			});
+			
+			/* Prepare treindata as a geoJSON collection */
+			function treindataCallback(err,json){
+				var collection = {"type":"FeatureCollection","features":[]};
+				json.forEach(function(d){
+					if (d.Trackee.match(/OBIS/g) || d.Trackee >= 4011)
+						var color =  "#000099";
+					else if (d.Trackee.match(/OBU/g) || d.Trackee < 4011)
+						var color = "#ffff00";
+					else
+						var color = "#cccccc";
+
+					var treinnummer = treinnummers.get(Math.trunc(d.Number/100)*100);
+					
+					var newlocation = {
+						type: "Feature",
+						style: {
+							fill: color,
+							stroke: color
+						},
+						id: d.Trackee,
+						properties: {
+							id: d.Trackee, 
+							number: d.Number, 
+							speed: d.Speed, 
+							track: d.Track, 
+							bps: d.Bps,
+							dop: d.Dop,
+							type: treinnummer ? treinnummer.type:'..',
+							route: treinnummer ? treinnummer.route:'..',
+							bijz: treinnummer ? treinnummer.bijz:'..'
+						},
+						geometry: {
+								type: "Point",
+								coordinates: [
+									d.Longitude,
+									d.Latitude
+									]
+						},
+						crs: {
+							type: "name",
+							properties: {
+								name: "urn:ogc:def:crs:OGC:1.3:CRS84"
+							}
+						}
+							
+					};
+					collection.features.push(newlocation);
+				});
+				collection.features.sort(function(a,b){return a.properties.number - b.properties.number;});
+				self.locations = collection.features;
+				var rows = d3.select(self.$.trainlist).selectAll('.row').data(self.locations);
+				rows.enter().append('div').classed('row', true).on('click', function(d){
+						d3.select(self.$.trainlist).selectAll('.row').classed('selected', false);
+						d3.select(this).classed('selected',true);
+						self.map.map.center = d.geometry.coordinates;
+				});
+				rows.html(function(d){
+						return '<core-icon style="color:'+d.style.fill+'" icon="maps:directions-train"></core-icon>'+d.id+' / '+d.properties.number+' '+d.properties.type+' '+d.properties.speed+' km/h <br>'
+						+ d.properties.route + '<br>'
+						+ '<small><i>'+d.properties.bijz+'</i></small>';
+				});
+				rows.exit().remove();
+				self.layer.data = collection.features;
+			}
+			function gettreinen(t){
+				var timestring = t.toISOString();
+				var datasource_treinen = "http://research.geodan.nl/service/trein/location/api/positions?username=ns&timestamp="+timestring;
+				d3.json(datasource_treinen)
+					.header("Authorization","Basic TlNhZG1pbjoyMGludGVyY2l0eTEz")
+					.get(treindataCallback);
+			}
+			clearInterval(this.treininterval);
+			 if (this.interval == 0){
+				 
+			 }
+			 else if (this.interval <= 1000){
+				 console.warn('Too small interval');
+			 }
+			 else{
+			 	 time = new Date();
+				 gettreinen(time);
+				 this.treininterval = setInterval(function(){
+					time = new Date();
+					gettreinen(time);
+				},this.interval);
+			 }
+		}	
+	}
+});
+</script>
+
+</polymer-element>

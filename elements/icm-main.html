@@ -7,8 +7,9 @@
 <link rel="import" href="../bower_components/core-icons/editor-icons.html">
 <link rel="import" href="../bower_components/core-icons/communication-icons.html">
 <link rel="import" href="../bower_components/core-icons/notification-icons.html">
-<link rel="import" href="../bower_components/core-icons/av-icons.html">
+<link rel="import" href="../bower_components/core-icons/device-icons.html">
 <link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-icons/image-icons.html">
 <link rel="import" href="../bower_components/core-iconset-svg/core-iconset-svg.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
@@ -17,6 +18,9 @@
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-cas.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-layercatalogus.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/gm-configreader.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-wmsreader.html">
 
 <link rel="import" href="../elements/icm-core.html">
 <link rel="import" href="../elements/icm-userlist.html">
@@ -24,6 +28,10 @@
 <link rel="import" href="../elements/icm-tekst.html">
 <link rel="import" href="../elements/icm-map.html">
 <link rel="import" href="../elements/icm-plugin-natuurbrand.html">
+<link rel="import" href="../elements/icm-plugin-p2000.html">
+<link rel="import" href="../elements/icm-plugin-rail.html">
+<link rel="import" href="../elements/icm-plugin-rws.html">
+<link rel="import" href="../elements/icm-plugin-tracker.html">
 
 <polymer-element name="icm-main">
   <template>
@@ -53,7 +61,11 @@
 
      core-toolbar {
 			background: white;
-		} 
+	 }
+	core-splitter {
+		width: 5px;
+		background: white;
+	}
     #top {
         position: absolute;
         top: 0;
@@ -131,32 +143,75 @@
   	<icm-plugin-natuurbrand core="{{core}}" map="{{$.map}}"></icm-plugin-natuurbrand>
   	<paper-button affirmative  autofocus>Sluit</paper-button>
   </paper-action-dialog>
-	
+  
+  <paper-action-dialog  class="scrolling"  id="P2000Plugin" transition="core-transition-right" heading="P2000" autoCloseDisabled>
+  	<icm-plugin-p2000 core="{{core}}" map="{{$.map}}"></icm-plugin-p2000>
+  	<paper-button affirmative  autofocus>Sluit</paper-button>
+  </paper-action-dialog>
+  
+  <paper-action-dialog  class="scrolling"  id="RailPlugin" transition="core-transition-right" heading="Rail" autoCloseDisabled>
+  	<icm-plugin-rail core="{{core}}" map="{{$.map}}"></icm-plugin-rail>
+  	<paper-button affirmative  autofocus>Sluit</paper-button>
+  </paper-action-dialog>
+ 
+  <paper-action-dialog  class="scrolling"  id="WaterstandenPlugin" transition="core-transition-right" heading="Waterstanden" autoCloseDisabled>
+  	<icm-plugin-rws core="{{core}}" map="{{$.map}}"></icm-plugin-rws>
+  	<paper-button affirmative  autofocus>Sluit</paper-button>
+  </paper-action-dialog>
+  
+  <paper-action-dialog  class="scrolling"  id="TrackerPlugin" transition="core-transition-right" heading="Tracker" autoCloseDisabled>
+  	<icm-plugin-tracker core="{{core}}" map="{{$.map}}"></icm-plugin-rws>
+  	<paper-button affirmative  autofocus>Sluit</paper-button>
+  </paper-action-dialog>
+  
+  <paper-action-dialog  class="scrolling"  id="layerlist" transition="core-transition-right" heading="Beschikbare lagen">
+	<div>
+		<h4>WMS:</h4>
+		<g-wmsreader url="{{url}}" catalogus="{{wmscatalogus}}"></g-wmsreader>
+		<g-layercatalogus id="wmscatalogus" mapType="d3.mappu" activeLayers="{{layers}}" catalogus="{{wmscatalogus}}"></g-layercatalogus>
+		<hr>
+		<h4>GM-config:</h4>
+		<gm-configreader account="{{account}}" catalogus="{{catalogus}}"></gm-configreader>
+		<g-layercatalogus id="layercatalogus" mapType="d3.mappu" activeLayers="{{layers}}" catalogus="{{catalogus}}"></g-layercatalogus>
+	</div>
+  </paper-action-dialog>
   
   <core-header-panel flex>
-    <core-toolbar>
+    <core-toolbar layout>
 	 <h3>Eagle Research</h3>
+	 <div flex>
 	 <paper-icon-button 
 	 	icon="home" 
 	 	on-click="{{gohome}}"></paper-icon-button>
-	 
 	 <paper-icon-button id="idicon" 
 	 	icon="{{account.ID==undefined?'social:person-outline':'account-circle'}}" 
 	 	on-click="{{toggleLogin}}"></paper-icon-button>
-	 
-	 <paper-icon-button  
-	 	icon="social:whatshot" 
-	 	on-click="{{toggleNBPlugin}}"></paper-icon-button>
-	 
-	 <paper-icon-button  
-	 	icon="maps:layers" 
-	 	on-click="{{toggleLayerCatalog}}"></paper-icon-button>	
-	 	
 	 <paper-icon-button id="connectionicon" 
 	 	icon="{{$.icmcore.connected?'notification:sync':'notification:sync-disabled'}}"
 	 	class="{{$.icmcore.connected?'connected':'disconnected'}}"
 	 	on-click="{{toggleConnection}}"></paper-icon-button>
-	 	
+	 </div>
+	 <div style="display:{{$.pages.selected==2?'block':'none'}}">
+	 <paper-icon-button  
+	 	icon="social:whatshot" 
+	 	on-click="{{toggleNBPlugin}}"></paper-icon-button>
+	 <paper-icon-button  
+	 	icon="device:wifi-tethering" 
+	 	on-click="{{toggleP2000Plugin}}"></paper-icon-button>
+	 <paper-icon-button  
+	 	icon="maps:directions-train" 
+	 	on-click="{{toggleRailPlugin}}"></paper-icon-button>
+	 <paper-icon-button  
+	 	icon="trending-up" 
+	 	on-click="{{toggleRwsPlugin}}"></paper-icon-button>	
+	 <paper-icon-button  
+	 	icon="image:flare" 
+	 	on-click="{{toggleTrackerPlugin}}"></paper-icon-button>	
+	 </div>
+	 <paper-icon-button  
+	 	icon="maps:layers" 
+	 	on-click="{{toggleLayerCatalog}}"></paper-icon-button>	
+	 </div>	
     </core-toolbar>
     
 	<div id="content" vertical layout>
@@ -184,11 +239,9 @@
 		<section id="page2">
 			<div cross-fade layout horizontal style="height:100%">
 				<icm-userlist core="{{core}}"></icm-userlist>
-				<icm-map id="map" core="{{core}}" account="{{account}}">
-					
-				</icm-map>
+				<icm-map id="map" core="{{core}}" layers="{{layers}}"></icm-map>
 				<core-splitter id="splitter" direction="left" allowOverflow></core-splitter>
-				<icm-tekst id="textbeeld" core="{{core}}" flex></icm-tekst>
+				<icm-tekst id="textbeeld" core="{{core}}" flex on-goto-location="{{gotolocation}}"></icm-tekst>
 			</div>
 		</section>
 	</core-animated-pages>
@@ -207,6 +260,7 @@ Polymer({
   	  core = this.core;
   	  this.ws = this.core.websocket();
   	  this.account = this.account || {};
+  	  this.layers = [];
   	  this.$.incidentlist.addEventListener('selected', function(d){
   	  	self.$.pages.selected = 2;
   	  });
@@ -226,14 +280,29 @@ Polymer({
   toggleNBPlugin: function() {
         this.$.NBPlugin.toggle();
   },
+  toggleRailPlugin: function() {
+        this.$.RailPlugin.toggle();
+  },
+  toggleRwsPlugin: function() {
+        this.$.WaterstandenPlugin.toggle();
+  },
+  toggleP2000Plugin: function() {
+        this.$.P2000Plugin.toggle();
+  },
+  toggleTrackerPlugin: function() {
+        this.$.TrackerPlugin.toggle();
+  },
   toggleLayerCatalog: function(){
-  	  this.$.map.toggleLayerCatalog();
+  	  this.$.layerlist.toggle();
   },
   accountChanged: function(){
 		if (this.account.ID){
 			this.$.pages.selected = 1;
 			this.$.icmcore.login(this.account);
 		}
+  },
+  gotolocation: function(event, data){
+  	  this.$.map.map.center = data.msg;
   }
 });
 </script>

@@ -1,6 +1,7 @@
 <link rel="import" href="../bower_components/core-ajax/core-ajax.html">
 <link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
 <link rel="import" href="../bower_components/paper-progress/paper-progress.html">
 <link rel="import" href="icm-plugin.html">
 
@@ -10,7 +11,7 @@
 </style>
 
 		<shadow></shadow>
-		<div>{{area}} km&sup2;</div>
+		
 		<b>Status:</b>
 		<div>Cropping terrain: {{makeSubsetStatus}}</div>
 		<paper-progress value="{{makeSubsetProgress}}"></paper-progress>
@@ -19,6 +20,26 @@
 		<div>Running model: {{fireStatus}}</div>
 		<paper-progress value="{{fireProgress}}"></paper-progress>
 		<br>
+		<div layout vertical>
+			<b>Inputs:</b>
+			Current area: 
+			<div>{{area}} km&sup2; <span style="color: red; display:{{area>100?'inline':'none'}}"><small> (max 100!)</small></span></div>
+			<paper-input-decorator label="Windspeed" floatingLabel id="paper2" error="Value must be a number!" isInvalid="{{!$.windspeed.validity.valid}}">
+				<input id="windspeed" type="number" is="core-input" pattern="^[0-9]." value="4">
+			</paper-input-decorator>
+			<paper-input-decorator label="Winddir" floatingLabel id="paper2" error="Value must be a number!" isInvalid="{{!$.winddir.validity.valid}}">
+				<input id="winddir" type="number" is="core-input" value="225">
+			</paper-input-decorator>
+			<paper-input-decorator label="Date" floatingLabel>
+				<input id="date" type="date" is="core-input" value="{{date}}">
+			</paper-input-decorator>
+			<paper-input-decorator label="Time" floatingLabel>
+				<input id="time" type="time" is="core-input" value="{{time}}">
+			</paper-input-decorator>
+			<paper-input-decorator label="Name" floatingLabel>
+				<input id="name" is="core-input" value="Testrun">
+			</paper-input-decorator><br>
+		</div>
 		<core-ajax id="wps_call"
 			url="/service/geoserver/ows?"
 			params='{}'
@@ -76,11 +97,19 @@ var Natuurbrand_utils = {
 			mimeType: 'application/json'
 		};
 		return params;
-	}
+	}	
 }
-
+function zpad(i, width) {
+    var s = Math.round(i) + '';
+    while (s.length < width) {
+        s = '0' + s;
+    }
+    return s;
+};
 
 Polymer({
+	date: new Date().toJSON().slice(0,10),
+	time: new Date().toJSON().slice(11,16),
 	makeLcpStatus: 'idle',
 	makeSubsetStatus: 'idle',
 	fireStatus: 'idle',
@@ -89,6 +118,7 @@ Polymer({
 		this.super();
 		this.extent = [];
 		this.layer = {};
+		
 	},
 	zoomChanged: function(){
 		var extent = this.map.$.mapelement.map.extent;
@@ -100,7 +130,7 @@ Polymer({
 		this.area = Math.round((width * height)/1000000);
 	},
 	observe: {
-		'layer.map.zoom': 'zoomChanged'
+		//'layer.map.zoom': 'zoomChanged'
 	},
 	domReady: function(){
 		this.super();
@@ -108,6 +138,9 @@ Polymer({
 		var map = this.map.$.mapelement.map;
 		this.extent = map.extent;
 		this.zoom = map.zoom;
+		map.dispatch.on('zoomend', function(){
+				self.zoomChanged();
+		});
 		this.layer = new d3.mappu.VectorLayer('Natuurbrand invoer',{
             visible: true,
             reproject: true,
@@ -210,7 +243,7 @@ Polymer({
 		extent[1] = proj4(mercator,extent[1]);
 		var params = Natuurbrand_utils.makesubset(extent);
 		this.$.wps_call.params = params; 
-		this.$.wps_call.go();
+		this.$.wps_call.go(); 
 		console.log(params);
 	},
 	startMakeLcp: function(terreinid){
@@ -246,13 +279,47 @@ Polymer({
 			});
 			stoparr.push(d.geometry.type.toUpperCase() + '(' + projected.join(',') + ')');
 		});
-		var stoplines = stoparr.join('!');
-		var windString="(03,19,1100,12,225,00),(03,19,1200,12,225,00),(03,19,1300,12,225,00),(03,19,1400,12,225,00),(03,19,1500,12,225,00),(03,19,1600,12,225,00),(03,19,1700,12,225,00),(03,19,1800,12,225,00),(03,19,1900,12,225,00),(03,19,2000,12,225,00),(03,19,2100,12,225,00),(03,19,2200,12,225,00),(03,19,2300,12,225,00),(03,20,1100,12,225,00)";
-		var weatherString="(03,13,00,0500,1500,-1,18,97,38,0000),(03,14,00,0500,1500,-2,13,99,53,0000),(03,15,00,0500,1500,07,12,91,57,0000),(03,16,00,0500,1500,07,12,86,66,0000),(03,17,00,0500,1500,06,12,94,67,0000),(03,18,00,0500,1500,06,10,95,76,0000),(03,19,00,0500,1500,07,16,86,42,0000),(03,20,00,0500,1500,07,16,86,42,0000)";
-		var startmonth='03';
-		var startday='19';
-		var starthour='1155';
+
+		var date = new Date(this.date+" "+this.time);
+		var startmonth = zpad(date.getMonth()+1,2);
+		var startday = zpad(date.getDate(),2);
+		var starthour = zpad(date.getHours(),2)+zpad(date.getMinutes(),2);
 		
+		var stoplines = stoparr.join('!');
+		
+		var winddir = zpad(this.$.winddir.value,3);
+		var windspeed = zpad(this.$.windspeed.value,2);
+		//var windString="(03,19,1100,12,225,00),(03,19,1200,12,225,00),(03,19,1300,12,225,00),(03,19,1400,12,225,00),(03,19,1500,12,225,00),(03,19,1600,12,225,00),(03,19,1700,12,225,00),(03,19,1800,12,225,00),(03,19,1900,12,225,00),(03,19,2000,12,225,00),(03,19,2100,12,225,00),(03,19,2200,12,225,00),(03,19,2300,12,225,00),(03,20,1100,12,225,00)";
+		//var weatherString="(03,13,00,0500,1500,-1,18,97,38,0000),(03,14,00,0500,1500,-2,13,99,53,0000),(03,15,00,0500,1500,07,12,91,57,0000),(03,16,00,0500,1500,07,12,86,66,0000),(03,17,00,0500,1500,06,12,94,67,0000),(03,18,00,0500,1500,06,10,95,76,0000),(03,19,00,0500,1500,07,16,86,42,0000),(03,20,00,0500,1500,07,16,86,42,0000)";
+		var weatherArr = [];
+		for (var i=7;i>=-1;i--){
+			//Start from 6 days in advance, until one day after
+			var date = new Date(this.date+" "+this.time);
+			date.setDate(date.getDate()-i);
+			var month = zpad(date.getMonth()+1,2);
+			var day = zpad(date.getDate(),2);
+			var str = "("+month+","+day+",00,0500,1500,20,28,20,20,0000)";
+			weatherArr.push(str);
+		}
+		var weatherString = weatherArr.join(',');
+		
+		var windArr = [];
+		for (var i=0;i<=6;i++){
+			//Run for 6 hours
+			var date = new Date(this.date+" "+this.time);
+			date.setHours(date.getHours()+i);
+			var month = zpad(date.getMonth()+1,2);
+			var day = zpad(date.getDate(),2);
+			var hour = zpad(date.getHours(),2)+zpad(date.getMinutes(),2);
+			var str = "("+month+","+day+","+hour+","+windspeed+","+winddir+",00)";
+			windArr.push(str);
+		}
+		//Add some extra wind till the next day, farsite doesn't like without
+		date.setHours(date.getHours()+24);
+		windArr.push("("+month+","+zpad(date.getDate(),2)+","+hour+","+windspeed+","+winddir+",00)");
+			
+		var windString = windArr.join(',');
+		var name = this.$.name.value;
 		var run_params = {
 			service: 'WPS',
 			version: '1.1.0',
@@ -260,7 +327,7 @@ Polymer({
 			identifier: 'py:wildfire_startRun',
 			datainputs: combineParams({
 				userid: 1,
-				name: 'polymertest', // naam van brand
+				name: name, // naam van brand
 				fuelmodel: landscapeid, // runid van fuelmodel (resultaat van makelcp)
 				geom: geom, // wkt LINESTRING(x y, ...) RD projectie
 				windstring: windString,
@@ -300,13 +367,14 @@ Polymer({
 			switch(result.modelname) {
 				case 'makeSubset':
 					self.startMakeLcp(runid);
+					//TODO: add correct URL
 					var map = self.map.$.mapelement.map
 					d3.json(url, function(res){
 					 	var layer =  new d3.mappu.RasterLayer('terrain'+runid,{
 					 		ogc_type: 'wms',
 					 		url: "/service/geoserver/model_wildfire/ows?",
 					 		layers: 'model_wildfire:terrein_'+runid
-					 	}).addTo(map);
+					 	}).addTo(map);       
 					});
 					break;
 				case 'makeLcp':

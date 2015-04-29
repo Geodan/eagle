@@ -5,9 +5,8 @@
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-map.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-drawingmenu.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-layermanager.html">
-<link rel="import" href="../bower_components/geodan-polymer/elements/g-layercatalogus.html">
 
-<polymer-element name="icm-map" attributes="core account">
+<polymer-element name="icm-map" attributes="core layers">
 <template>
 
 <style>
@@ -19,8 +18,8 @@ g-layermanager {
   display: block;
   position: absolute;
   left: 10%;
-  top: 50px;
-  width: 400px;
+  top: 70px;
+  width: 300px;
   z-index: 102;
 }
 /*
@@ -53,16 +52,14 @@ g-zoommenu{
 <g-zoommenu id="zoommenu" map="{{map}}"></g-zoommenu>
 <g-drawingmenu id="drawmenu" map="{{map}}"></g-drawingmenu>
 <g-layermanager id="layermngr" map="{{map}}" layers="{{layers}}"></g-layermanager>
-<paper-action-dialog  class="scrolling"  id="layerlist" transition="core-transition-right" heading="Beschikbare lagen">
-	<g-layercatalogus id="layercatalogus" mapType="d3.mappu" activeLayers="{{layers}}" account="{{account}}" filters="{{filters}}"></g-layercatalogus>
-</paper-action-dialog>
-<g-map id="mapelement" latitude="52.2" longitude="5.2" zoomlevel="23">
+
+<g-map id="mapelement" layers="{{layers}}" latitude="52.2" longitude="5.2" zoomlevel="23">
 		<g-maprasterlayer 
 			id="Mapbox"
 			type="tms"
 			url="http://{s}.tiles.mapbox.com/v3/examples.map-i86nkdio/{z}/{x}/{y}.png"
 		></g-maprasterlayer>
-		<g-mapvectorlayer id="communication" name="Communication"></g-mapvectorlayer>
+		<g-mapvectorlayer id="communication" name="Communication" config="{{layerconfig}}"></g-mapvectorlayer>
 </g-map>
 
 </template>
@@ -76,6 +73,7 @@ Polymer({
 		'core._projectid': 'switchProject'
 	},
 	created: function(){
+		this.layerconfig = {labelfield: 'name'};
 		this.points = [];
 		this.lines = [];
 		this.polygons = [];
@@ -84,14 +82,25 @@ Polymer({
 	ready: function(){
 		this.layers = [];
         this.filters = [];
-        this.account = {};
         this.activeLayers = [];
 	},
 	domReady: function(){
 		var core = this.core;
 		this.map = this.$.mapelement.map;
 		tmp = this.map;
-
+		this.map.zoom = 18;
+		/*
+		l = new d3.mappu.RasterLayer("Mapbox", {
+				ogc_type: 'tms',
+				url: "http://{s}.tiles.mapbox.com/v3/examples.map-i86nkdio/{z}/{x}/{y}.png",
+				visible: true,
+				config: {
+					title: 'Mapbox'
+				},
+				minZoom: 24
+		});
+		this.layers.push(l);
+		*/
 		this.$.communication.addEventListener('featchanged', function(d){
 			var feat = d.detail;
 			var id = feat.id;
@@ -198,10 +207,10 @@ Polymer({
 		});
 		
 		this.$.communication.newdata(feats);
-	},
+	},/*
 	toggleLayerCatalog: function(){
 		this.$.layerlist.toggle();
-	}
+	}*/
 		
 });
 </script>
