@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+
+  <body>
+
+  
+  <script>
+  console.log('!!');
+// Basically the same as a dedicated worker
+var worker = new SharedWorker('webworker.js');
+
+// Note we have to deal with port now
+worker.port.onmessage = function(e) {
+    msg = 'Someone just said "' + e.data.message + '". That is message number ' + e.data.counter;
+    console.log(msg);
+};
+worker.port.start();
+// Messages must go to the port as well
+worker.port.postMessage('hello shared worker!');
+</script>
+</body>
+</html>

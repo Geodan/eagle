@@ -1,0 +1,204 @@
+<link rel="import" href="../bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../bower_components/core-splitter/core-splitter.html">
+<link rel="import" href="../bower_components/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="../bower_components/core-icons/maps-icons.html">
+<link rel="import" href="../bower_components/core-icons/av-icons.html">
+<link rel="import" href="../bower_components/core-icons/editor-icons.html">
+<link rel="import" href="../bower_components/core-icons/communication-icons.html">
+<link rel="import" href="../bower_components/core-icons/notification-icons.html">
+<link rel="import" href="../bower_components/core-icons/av-icons.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-iconset-svg/core-iconset-svg.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-cas.html">
+
+<link rel="import" href="../elements/icm-core.html">
+<link rel="import" href="../elements/icm-userlist.html">
+<link rel="import" href="../elements/icm-incidentlist.html">
+<link rel="import" href="../elements/icm-tekst.html">
+
+<polymer-element name="icm-textonly">
+  <template>
+  	<style>
+  	
+  	:host {
+        display: block;
+        position: relative;
+        background-color: #eee;
+        overflow: hidden;
+
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-touch-callout: none;
+        -webkit-font-smoothing: antialiased;
+      }
+      core-header-panel {
+      	  height: 100%;
+      }
+      core-scroll-header-panel {
+      	  height: 100%;
+      }
+
+     core-toolbar {
+			background: white;
+		} 
+    #top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1;
+      }
+    paper-icon-button {
+		color: lightGray;
+	}
+	
+	#login {
+		float: right;
+		top: 6px;
+	}
+     #content {
+        position: absolute;
+        overflow:auto;
+        height: 100%;
+        width: 100%;
+      }
+      icm-incidentlist {
+      	  padding-left: 10%;
+      	  padding: 2%;
+      }
+      
+      icm-userlist {
+      	  overflow: auto;
+      	  display: block;
+      	  width: 10%;
+      }
+     
+      icm-tekst {
+      	  overflow: auto;
+      	  display: block;
+      	  width: 40%;
+      }
+      #textbeeld {
+      	  overflow: auto;
+      }
+      
+      icm-map {
+      	  height: 100%;
+      	  width: 60%;
+      	  display: block;
+      	  overflow: auto;
+      }
+      
+      .disconnected {
+      	  color: red;
+      }
+      
+      #msg {
+      	  position: absolute;
+      	  width: 50%;
+      	  left: 25%;
+      	  top: 30%;
+      	  height: 30%;
+      	  vertical-align: center;
+      }
+      @media print {
+      	  icm-userlist {
+      	  	  display: none;
+      	  }
+      	  icm-map{
+      	  	  display: none;
+      	  }
+      }
+      
+     </style>
+     
+  <icm-core id="icmcore"></icm-core>
+  
+  <paper-action-dialog  class="scrolling"  id="NBPlugin" transition="core-transition-right" heading="Natuurbrandmodel" autoCloseDisabled>
+  	<icm-plugin-natuurbrand core="{{core}}" map="{{$.map}}"></icm-plugin-natuurbrand>
+  	<paper-button affirmative  autofocus>Sluit</paper-button>
+  </paper-action-dialog>
+	
+  
+  <core-header-panel flex>
+    
+	<div id="content" vertical layout>
+	<paper-action-dialog id="login" transition="core-transition-right">
+	<g-cas account="{{account}}"></g-cas>
+		<template if="{{account.ID!=undefined}}"> <paper-button affirmative  style="color:red">
+			<A href="https://services.geodan.nl/cas/logout">Uitloggen</a></paper-button>
+		</template>
+		<paper-button affirmative  autofocus>Sluit</paper-button>
+	</paper-action-dialog>
+	
+	<core-animated-pages id="pages" selected=0 fit transitions="cross-fade">
+		<section id="page0" >
+		<paper-shadow z=2>
+		<div id="msg">
+			U bent niet aangemeld bij de geodan cloud...
+		</div>
+		</paper-shadow>
+		</section>
+		<section id="page1">
+			<div cross-fade layout vertical>
+			<icm-incidentlist id="incidentlist" core="{{core}}"></icm-incidentlist>
+			</div>
+		</section>
+		<section id="page2">
+			<div cross-fade layout horizontal style="height:100%">
+				<icm-tekst id="textbeeld" core="{{core}}" flex></icm-tekst>
+			</div>
+		</section>
+	</core-animated-pages>
+	</div>
+  <paper-toast id="toaster" text=" "></paper-toast>
+  </core-header-panel>
+  
+</template>
+<script>
+var core;
+Polymer({
+  readyState: false,
+  ready: function() {
+  	  var self = this;
+  	  this.core = this.$.icmcore.core;
+  	  core = this.core;
+  	  this.ws = this.core.websocket();
+  	  this.account = this.account || {};
+  	  this.$.incidentlist.addEventListener('selected', function(d){
+  	  	self.$.pages.selected = 2;
+  	  });
+  	  
+  }, 
+  gohome: function(){
+  	  this.$.pages.selected = 1;
+  },
+  toggleLogin: function() {
+		this.$.login.toggle();
+  },
+  toggleConnection: function(){
+  	  this.$.icmcore.toggleConnection();
+  },
+  toggleNBPlugin: function() {
+        this.$.NBPlugin.toggle();
+  },
+  accountChanged: function(){
+		if (this.account.ID){
+			this.$.pages.selected = 1;
+			this.$.icmcore.login(this.account);
+		}
+  }
+});
+</script>
+</polymer-element>

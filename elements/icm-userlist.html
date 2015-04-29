@@ -1,0 +1,85 @@
+<link rel="import" href="../bower_components/core-collapse/core-collapse.html">
+
+<polymer-element name="icm-userlist" attributes="core">
+<template>
+    <style>
+    .user {
+		background: white;
+		padding: 5px;
+		cursor: pointer;
+	}
+	
+	.userinfo {
+		padding: 5px;
+		padding-left: 10px;
+	}
+    </style>
+    <h3>Online users:</h3>
+    <template repeat="{{user,i in users}}">
+    	<paper-shadow z=2><div class='user' val="{{i}}" on-click="{{toggle}}">{{user | name}}</div></paper-shadow>
+    	<core-collapse id="no{{i}}">
+    	<div class='userinfo'>
+    		{{user._id}}<br>
+    		{{user | updated}}<br>
+    		<template repeat="{{chat in chats | onlyme}}">
+    			{{chat._data.content}}<br>
+    		</template>
+    	</div>
+    	</core-collapse>
+    </template>
+    <h3>All users:</h3>
+    <template repeat="{{user,i in offlineusers}}">
+    	<paper-shadow z=2><div class='user' val="offline{{i}}" on-click="{{toggle}}">{{user | name}}</div></paper-shadow>
+    	<core-collapse id="nooffline{{i}}">
+    	<div class='userinfo'>
+    		{{user._id}}<br>
+    		{{user | updated}}
+    	</div>
+    	</core-collapse>
+    </template>
+</template>
+
+<script>
+
+Polymer({
+	created: function(){
+		this.users = [];
+		this.chats = [];
+	},
+	domReady: function(){
+		var self = this;
+		var core = this.core;
+		
+		core.userStore().loaded.then(function(d){
+			self.users = core.activeUsers();
+			self.offlineusers = core.users().filter(function(d){return !d.deleted();});
+		});
+		core.peerStore().on('datachange', function(d){
+			self.users = core.activeUsers();
+			self.offlineusers = core.users().filter(function(d){return !d.deleted();});
+			if (core.project()){
+				self.chats = core.project().items().filter(function(d){return d.data('from') && d.data('to')});
+			}
+		});
+				
+	},
+	toggle: function(e){
+		//TODO: there must be a nicer way to get this done..
+		var val = e.target.getAttribute('val');
+		this.shadowRoot.getElementById('no'+val).toggle();
+	},
+	name: function(d){
+		return d.data('name');
+	},
+	updated: function(d){
+		return new Date(d.updated()).toLocaleTimeString();
+	},
+	onlyme: function(d){
+		var self = this;
+		return d.filter(function(x){
+			return x.data('to') == self.user._id;
+		});
+	}
+});
+</script>
+</polymer-element>

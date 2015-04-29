@@ -1,0 +1,53 @@
+<polymer-element name="icm-header">
+<template>
+    <style>
+    ::host {
+    	background: red;
+    }
+    </style>
+    <template bind="{{ws as ws}}">
+        <small><b>Connection: </b>{{ws._connected | connected}}</small><br>
+    </template>
+    <template bind="{{core as c}}">
+        <small><b>Current user: </b>{{c._userid |getUserName}}</small><br>
+        <small><b>Current project: </b>{{c._projectid | getProjectName}}</small>
+    </template>
+   
+</template>
+
+<script>
+Polymer({
+	username: null,
+	online: false,
+	created: function(){
+		this.ws = core.websocket();
+        this.core = core;
+        this.project = core.project();
+	},
+	ready: function(){
+		
+	},
+	connected: function(value){
+		 if (value){
+			 return "OK";
+		 }
+		 else {
+			 if (core.websocket().connection().readyState > 1){
+				 //this.$.toast1.show();
+			 }
+			 return "disconnected :(";
+		 }
+	 },
+     getUserName: function(id){
+         if (core.user())
+             return core.user().data('name');
+         return "";
+     },
+     getProjectName: function(id){
+         if (core.project())
+             return core.project().data('name');
+         return "";
+     }
+});
+</script>
+</polymer-element>

@@ -1,0 +1,32 @@
+<polymer-element name="leaflet-map-draw" extends="leaflet-map">
+
+    <template>
+    	<link rel="stylesheet" href="../bower_components/leaflet-draw/dist/leaflet.draw.css" />
+    	<style>
+			:host { display: block; } 
+			:host #map {height:100%; width:100%}
+		</style>
+        <shadow></shadow>
+    </template>
+
+    <script>
+        Polymer({
+
+            domReady: function() {
+                this.super();
+
+                var drawItems = new L.featureGroup();
+                this.map.addLayer(drawItems);
+
+                var drawControl = new L.Control.Draw( {
+                    edit: {
+                        featureGroup: drawItems
+                    }
+                });
+                this.map.addControl(drawControl);
+            }
+        })
+    </script>
+
+
+</polymer-element>
