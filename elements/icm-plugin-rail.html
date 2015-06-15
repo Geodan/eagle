@@ -99,7 +99,8 @@ Polymer({
 		}
 		else { //OFF
 			this.locations = [];
-			clearInterval(this.treininterval);
+			//clearInterval(this.treininterval);
+			this.socket.close();
 			this.map.map.removeLayer(this.layer);
 			this.map.map.removeLayer(this.spoorvakkenlayer);
 		}
@@ -117,6 +118,8 @@ Polymer({
 	enable: function(){
 		var self = this;
 		var map = this.map.$.mapelement.map;
+		var m = d3.map([], function(d) { return d.id; });
+		
 		if (map.mapdiv){
 			this.spoorvakkenlayer = new d3.mappu.VectorLayer('spoor', {
 				reproject: false,
@@ -174,18 +177,65 @@ Polymer({
 				treinnummers = d3.map(data, function(d){return d.nummer;});
 			});
 			
+			var socket = new WebSocket("ws://192.168.24.15:9998",['connect']);
+			this.socket = socket;
+			socket.onopen = function(){
+				self.socketState = socket.readyState;
+			}
+			socket.onerror = function(error){
+				console.warn(error);
+				self.socketState = socket.readyState;
+			}
+			socket.onclose = function(){
+				console.log('Socket closed, readystate: ',socket.readyState);
+				self.socketState = socket.readyState;
+			}
+			socket.onmessage = function(msg){
+				var json = JSON.parse(msg.data);
+				addTrain(json);
+				//console.log(json);
+			}
+			var color = d3.scale.linear()
+				.domain([0, 40, 100,160])
+				.range(['gray', 'orange', 'red','purple']);
+			function doCircles(){
+				var circles = map.svg.select('#'+self.layer.id).selectAll('circle').data(m.values(), function(d){return d.id;});
+				circles.enter().append('circle')
+					.attr('r',5)
+					.style('fill',function(d){
+							return d.style.fill;
+					}).style('stroke',function(d){
+							return d.style.stroke;
+					});
+				circles.each(function(d){
+					if (d.x != d.x_old || d.y != d.y_old){
+						var circle = d3.select(this);
+						d.x_old = d.x;
+						d.y_old = d.y;
+						var loc = map.projection([d.x,d.y]);
+						circle.transition().duration(1000 * 10).ease('linear')
+							.attr('cx',loc[0])
+							.attr('cy',loc[1])
+							.style('fill', function(d){
+								return color(d.properties.speed);
+							}).style('stroke', 'none');
+					}
+				});
+				circles.exit().remove();
+			}
+			window.setInterval(doCircles,100);
+			//d3.timer(doCircles, 5 * 1000);
+			var counter = 0;
 			/* Prepare treindata as a geoJSON collection */
-			function treindataCallback(err,json){
-				var collection = {"type":"FeatureCollection","features":[]};
-				json.forEach(function(d){
-					if (d.Trackee.match(/OBIS/g) || d.Trackee >= 4011)
+			function addTrain(d){
+					if (d.trackeeid.match(/OBIS/g) || d.trackeeid >= 4011)
 						var color =  "#000099";
-					else if (d.Trackee.match(/OBU/g) || d.Trackee < 4011)
+					else if (d.trackeeid.match(/OBU/g) || d.trackeeid < 4011)
 						var color = "#ffff00";
 					else
 						var color = "#cccccc";
 
-					var treinnummer = treinnummers.get(Math.trunc(d.Number/100)*100);
+					//var treinnummer = treinnummers.get(Math.trunc(d.Number/100)*100);
 					
 					var newlocation = {
 						type: "Feature",
@@ -193,23 +243,25 @@ Polymer({
 							fill: color,
 							stroke: color
 						},
-						id: d.Trackee,
+						id: d.trackeeid,
+						x: d.x,
+						y: d.y,
 						properties: {
-							id: d.Trackee, 
-							number: d.Number, 
-							speed: d.Speed, 
-							track: d.Track, 
-							bps: d.Bps,
-							dop: d.Dop,
-							type: treinnummer ? treinnummer.type:'..',
-							route: treinnummer ? treinnummer.route:'..',
-							bijz: treinnummer ? treinnummer.bijz:'..'
+							id: d.trackeeid, 
+							//number: d.Number, 
+							speed: d.speed, 
+							//track: d.Track, 
+							//bps: d.Bps,
+							//dop: d.Dop,
+							//type: treinnummer ? treinnummer.type:'..',
+							//route: treinnummer ? treinnummer.route:'..',
+							//bijz: treinnummer ? treinnummer.bijz:'..'
 						},
 						geometry: {
 								type: "Point",
 								coordinates: [
-									d.Longitude,
-									d.Latitude
+									d.x,
+									d.y
 									]
 						},
 						crs: {
@@ -220,11 +272,19 @@ Polymer({
 						}
 							
 					};
-					collection.features.push(newlocation);
-				});
-				collection.features.sort(function(a,b){return a.properties.number - b.properties.number;});
-				self.locations = collection.features;
-				var rows = d3.select(self.$.trainlist).selectAll('.row').data(self.locations);
+			
+				//collection.features.sort(function(a,b){return a.properties.number - b.properties.number;});
+						
+				//self.layer.addFeature(newlocation);
+				m.set(newlocation.id, newlocation);
+				counter++;
+				if (counter > 1000){
+					counter = 0;
+					//doCircles();
+				}
+					
+				/*
+				var rows = d3.select(self.$.trainlist).selectAll('.row').data(m.values);
 				rows.enter().append('div').classed('row', true).on('click', function(d){
 						d3.select(self.$.trainlist).selectAll('.row').classed('selected', false);
 						d3.select(this).classed('selected',true);
@@ -236,30 +296,8 @@ Polymer({
 						+ '<small><i>'+d.properties.bijz+'</i></small>';
 				});
 				rows.exit().remove();
-				self.layer.data = collection.features;
+				*/
 			}
-			function gettreinen(t){
-				var timestring = t.toISOString();
-				var datasource_treinen = "http://research.geodan.nl/service/trein/location/api/positions?username=ns&timestamp="+timestring;
-				d3.json(datasource_treinen)
-					.header("Authorization","Basic TlNhZG1pbjoyMGludGVyY2l0eTEz")
-					.get(treindataCallback);
-			}
-			clearInterval(this.treininterval);
-			 if (this.interval == 0){
-				 
-			 }
-			 else if (this.interval <= 1000){
-				 console.warn('Too small interval');
-			 }
-			 else{
-			 	 time = new Date();
-				 gettreinen(time);
-				 this.treininterval = setInterval(function(){
-					time = new Date();
-					gettreinen(time);
-				},this.interval);
-			 }
 		}	
 	}
 });

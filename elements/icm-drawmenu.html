@@ -1,0 +1,25 @@
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-drawingmenu.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
+<polymer-element name="icm-drawmenu" attributes="map">
+<template>
+<style>
+</style>
+
+
+<g-drawingmenu id="drawmenu" core="{{core}}" map="{{map}}"></g-drawingmenu>
+
+</template>
+
+<script>
+var tmp;
+Polymer({
+	observe: {
+		'core._projectid': 'switchProject'
+	},
+	switchProject: function(){
+		
+	}
+});
+
+</script>
+</polymer-element>

@@ -1,0 +1,78 @@
+<!--
+	Create, update or delete incident
+-->
+<polymer-element name="icm-incidentcrud" attributes='core'>
+<template>
+    <style>
+#paper-button {
+    background: steelBlue;
+    color: yellow;
+}
+    </style>
+    <paper-input id="name" label="Naam"></paper-input><br>
+    <paper-button on-click="{{crud}}">
+	  Voeg toe
+	 </paper-button>
+    
+</template>
+
+<script>
+Polymer({
+	created: function(){
+		
+	},
+	crud: function(a,b,c){
+		var name = this.$.name.value;
+		var project = this.core.projects({});
+		project.data('name', name)
+			.data('status','Actief')
+			.data('type', 'Geofort')
+			.data('location',{lat: 51.881892, lon: 5.110007, zoomlevel: 20})
+			.data('teams',[
+				{id: 1, name: 'Incident', boxes: [
+						{id: 1, type: 'text', name: 'Meldingen'}
+				]},
+				{id: 2, name: 'Team Populatie', boxes: [
+						{id: 2, type: 'text', name: 'Opdracht'},
+						{id: 1, type: 'text', name: 'Samenvatting'}
+				]},
+				{id: 3, name: 'Team Evacuatie', boxes: [
+						{id: 2, type: 'text', name: 'Opdracht'},
+						{id: 1, type: 'text', name: 'Samenvatting'}
+				]},
+				{id: 4, name: 'Team Opvang', boxes: [
+						{id: 2, type: 'text', name: 'Opdracht'},
+						{id: 1, type: 'text', name: 'Samenvatting'}
+				]},
+				{id: 5, name: 'Team Communicatie', boxes: [
+						{id: 2, type: 'text', name: 'Opdracht'},
+						{id: 1, type: 'text', name: 'Samenvatting'}
+				]}
+			]).sync();
+		var opvangtext = ""
+		+ "U moet de locaties zoeken waar de evacuees kunnen worden opgevangen. Gebruik hiervoor google maps en zoek naar sporthallen. Voeg in ieder geval de volgende locaties toe:"
+		+ "- Verzorgingstehuis Ter Leede, opvangcapaciteit 50 bedden<br>" 
+		+ "- Beatrix ziekenhuis, opvang speciale zorg 20, normaal 80 bed.<br>"
+		+ "- Verzorgingstehuis Lingehof, noodcapaciteit 25 bedden. <br>" 
+		+ "- Sporthal Interweij, tot max 2000 personen.<br>" 
+		+ "- Sporthal De Smidseberg, maximaal 1500 personen. <br>";
+		project.items({}).data({type: "text", team: 2, box: 2, text: "U moet zien uit te vinden waar en hoeveel bewoners in het gebied zijn.<br> Let daarbij extra op kwetsbare groepen."}).sync();
+		project.items({}).data({type: "text", team: 3, box: 2, text: "U moet de beste evacuatieroutes vinden en intekenen met behulp van de hoogtekaart. Let op de locatie van de bruggen!"}).sync();
+		project.items({}).data({type: "text", team: 4, box: 2, text: opvangtext}).sync();
+		project.items({}).data({type: "text", team: 5, box: 2, text: "U moet zorgen dat alle teams met elkaar blijven comminiceren en uiteindelijk geeft u een samenvatting aan de burgemeester."}).sync();
+	},
+	domReady: function(){
+		var self = this;
+		var core = this.core;
+		
+	},
+	name: function(d){
+		return d.data('name');
+	},                      
+	date: function(d){
+		return new Date(d.created()).toLocaleString();
+	}
+
+});
+</script>
+</polymer-element>

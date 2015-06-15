@@ -1,0 +1,75 @@
+<link rel="import" href="../bower_components/core-ajax/core-ajax.html">
+<link rel="import" href="../bower_components/core-list/core-list.html">
+<link rel="import" href="../bower_components/core-icons/social-icons.html">
+<link rel="import" href="../bower_components/core-icons/maps-icons.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="icm-plugin.html">
+
+
+<polymer-element name="icm-plugin-video" extends="icm-plugin">
+<template>
+	<style>
+	.incidentinfo {
+		padding: 5px;
+		padding-left: 10px;
+		font-size: 8pt;
+		width: 400px;
+	}
+	core-list {
+		height: 600px;
+	}
+	.selected {
+		background: #e2e2ff;
+	}
+	</style>
+	<shadow></shadow>
+	
+	
+	<video width="320" height="240" controls>
+	  <source src="https://manifest.googlevideo.com/api/manifest/hls_variant/key/yt5/ip/80.113.1.130/gcr/nl/maudio/1/sparams/gcr%2Chfr%2Cid%2Cip%2Cipbits%2Citag%2Cmaudio%2Cplaylist_type%2Cpmbypass%2Cratebypass%2Csource%2Cexpire/hfr/1/fexp/907263%2C934954%2C935000%2C938028%2C9406517%2C9406921%2C9407662%2C9408026%2C9408142%2C9408706%2C9408968%2C9409060%2C9413058%2C9414602%2C948124%2C952612%2C952637%2C952642/ratebypass/yes/ipbits/0/pmbypass/yes/itag/0/id/gnQ-OL-vkqw.1/upn/d2VU7SD4xYg/signature/3371FBA0A82AF22C6650FA044CB76EA21F910583.6BBE96F2307726DD752E69234440D5030FB87CF9/source/yt_live_broadcast/playlist_type/DVR/keepalive/yes/sver/3/expire/1431032587/file/index.m3u8" type="video/mp4">
+	  
+	  Your browser does not support the video tag.
+	</video>
+	
+	
+</template>
+
+
+
+<script>
+
+Polymer({
+	socketState: null,
+	ready: function(){
+		this.super();
+		this.layer = {};
+		this.locations = [];
+	},
+	selection: null,
+	domReady: function(){
+		this.super();
+	},
+	toggle: function(e){
+		this.super();
+		if (e.srcElement.checked){ //ON
+			this.enable();
+		}
+		else { //OFF
+			this.locations = [];
+		}
+	},
+	selectionChanged: function(){
+		if (this.selection){
+			this.map.map.center = this.selection.geometry.coordinates;
+			//this.map.map.zoom = 24; //can't zoom while still centering (bug in mappu)
+		}
+		
+	},
+	enable: function(){
+		var self = this;
+	}
+});
+</script>
+
+</polymer-element>
