@@ -26,6 +26,7 @@
 	#viewtext {
 		display: block;
 		background: white;
+		color: gray;
 		padding-left: 10px;
 		padding-right: 10px;
 		cursor: pointer;
@@ -143,7 +144,9 @@ Polymer({
 			
 			var text = items[0].data('text');
 			//Some discussion going on about size update here: https://github.com/Polymer/paper-input/issues/118
-			this.$.text.value = text;
+			if (!this.dirty){ //only update when not in edit mode
+				this.$.text.value = text;
+			}
 			this.$.a1.update(this.$.text);
 			this.text = text;
 			this.itemtime = new Date(this.item.updated()).toLocaleTimeString();

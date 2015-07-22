@@ -1,9 +1,12 @@
 <link rel="import" href="../bower_components/paper-dialog/paper-action-dialog.html">
+<link rel="import" href="../bower_components/core-icon-button/core-icon-button.html">
+<link rel="import" href="../bower_components/core-dropdown/core-dropdown.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-zoommenu.html">
+<link rel="import" href="./icm-drawmenu.html">
+<link rel="import" href="../bower_components/geodan-polymer/elements/g-suggest.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-mapvectorlayer.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-maprasterlayer.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-map.html">
-<link rel="import" href="../bower_components/geodan-polymer/elements/g-drawingmenu.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-layermanager.html">
 
 <polymer-element name="icm-map" attributes="core layers">
@@ -14,13 +17,28 @@ g-map {
   height: 100%;
   position: relative;
 }
+#trigger {
+	display: block;
+	position: absolute;
+	margin-left: 10px;
+	top: 70px;
+	z-index: 10;
+}
 g-layermanager {
-  display: block;
+  display: none;
   position: absolute;
-  left: 10%;
-  top: 70px;
+  left: 10px;
+  top: 120px;
   width: 300px;
   z-index: 102;
+}
+g-suggest {
+  display: block;
+  position: absolute;
+  left: 40%;
+  top: 10px;
+  width: 400px;
+  z-index: 101;
 }
 /*
 g-layercatalogus {
@@ -42,24 +60,26 @@ g-drawingmenu {
 g-zoommenu{
   display: block;
   position: absolute;
-  margin-left: 10px;
-  margin-top: 10px;
   top: 0px;
   width: 200px;
   z-index: 101;
 }
 </style>
-<g-zoommenu id="zoommenu" map="{{map}}"></g-zoommenu>
-<g-drawingmenu id="drawmenu" map="{{map}}"></g-drawingmenu>
-<g-layermanager id="layermngr" map="{{map}}" layers="{{layers}}"></g-layermanager>
 
-<g-map id="mapelement" layers="{{layers}}" latitude="52.2" longitude="5.2" zoomlevel="23">
+<g-suggest id="suggest"></g-suggest>
+<g-zoommenu id="zoommenu" map="{{map}}"></g-zoommenu>
+<paper-fab mini id="trigger" icon="list" on-click="{{toggleLayers}}"></paper-fab>
+<g-layermanager id="layermngr" map="{{map}}" layers="{{layers}}"></g-layermanager>
+<g-drawingmenu id="drawmenu" core="{{core}}" map="{{map}}"></g-drawingmenu>
+<g-map id="mapelement" layers="{{layers}}" latitude="52.2" longitude="5.2" zoomlevel="20">
 		<g-maprasterlayer 
 			id="Mapbox"
+			name="Mapbox"
 			type="tms"
 			url="http://{s}.tiles.mapbox.com/v3/examples.map-i86nkdio/{z}/{x}/{y}.png"
 		></g-maprasterlayer>
 		<g-mapvectorlayer id="communication" name="Communication" config="{{layerconfig}}"></g-mapvectorlayer>
+		<g-mapvectorlayer id="location" name="Search"></g-mapvectorlayer>
 </g-map>
 
 </template>
@@ -85,10 +105,20 @@ Polymer({
         this.activeLayers = [];
 	},
 	domReady: function(){
+		var self = this;
 		var core = this.core;
 		this.map = this.$.mapelement.map;
 		tmp = this.map;
-		this.map.zoom = 18;
+		//this.map.zoom = 24;
+		this.map.maxzoom = 30;
+		this.$.suggest.addEventListener('location', function(d){
+			var center = d.detail.msg.centroid.geometry.coordinates;
+			self.map.center = center;
+			//self.$.mapelement.map.zoomToFeature(d.detail.msg.geom); //Doesn't work yet
+			var feat = d.detail.msg.geom;
+			self.$.location.newdata([feat]);
+		});
+		
 		/*
 		l = new d3.mappu.RasterLayer("Mapbox", {
 				ogc_type: 'tms',
@@ -101,13 +131,69 @@ Polymer({
 		});
 		this.layers.push(l);
 		*/
-		this.$.communication.addEventListener('featchanged', function(d){
+		/* Geofort layers */
+		
+		var l1 = new d3.mappu.VectorLayer('Overstroming', {
+				reproject: true,
+				visible: true,
+				opacity: 0,
+				style: {
+					fill: 'none',
+					stroke: 'blue',
+					'stroke-width': '2px'
+				}
+		}).addTo(this.map);
+		var t = 0;
+		d3.json('./data/flood_merged.geojson', function(data){
+			data.features.forEach(function(d){
+				d.id = t++;
+			});
+			l1.data = data.features;
+		});
+		//this.layers.push(l1);
+		this.layers = this.map.layers;
+		
+		this.$.communication.addEventListener('editFeature', function(d){
+			var feat = d.detail;
+			self.$.drawmenu.sketch.edit(feat);//TODO: cleaner method?
+		});
+		this.$.communication.addEventListener('changeFeature', function(d){
 			var feat = d.detail;
 			var id = feat.id;
 			var item = core.project().items(id);
 			item.data('feature',feat).sync();
 		});
+		this.$.communication.addEventListener('removeFeature', function(e){
+			var id = e.detail.id;
+			if (id){
+				var item = core.project().items(id.toString());
+				item.deleted(true);
+				item.sync(); 
+			}
+			else {
+				console.warn('No id for feature given');
+			}
+		});
+		
 		this.map.mapdiv.addEventListener('featureCreated', function(e){
+			//TODO: This should be arranged from the drawingmenu
+			var feature = e.detail;
+			if (feature.geometry.type == 'Point'){
+				feature.style['marker-url'] = self.$.drawmenu.selectedIcon;
+			}
+			else if (feature.geometry.type == 'LineString'){
+				feature.style.stroke = self.$.drawmenu.selectedLineColor || 'blue';
+				feature.style.fill = 'none';
+				feature.style['stroke-width'] = '4px';
+			}
+			else if (feature.geometry.type == 'Polygon'){
+				feature.style.stroke = self.$.drawmenu.selectedPolyColor || 'blue';
+				feature.style.fill = 'none'; //Fill is not usefull on map
+				feature.style['fill-opacity'] = 0.3;
+				feature.style['stroke-width'] = '2px';
+			}
+
+			
 			var item = core.project().items({});
 			item.data('type', 'feature');
 			item.data('feature', e.detail);
@@ -142,6 +228,7 @@ Polymer({
 	switchProject: function(){
 		var self = this;
 		var core = this.core;
+		//Here's an issue: since the SVG doesn;t have a size at this moment, the map centers wrong
 		window.setTimeout(function(){ //FIXME
 			self.$.mapelement.resize();
 			self.map = self.$.mapelement.map;
@@ -211,6 +298,14 @@ Polymer({
 	toggleLayerCatalog: function(){
 		this.$.layerlist.toggle();
 	}*/
+	toggleLayers: function(){
+		if (this.$.layermngr.style.display != 'block'){
+			this.$.layermngr.style.display = 'block';
+		}
+		else {
+			this.$.layermngr.style.display = 'none';
+		}
+	}
 		
 });
 </script>

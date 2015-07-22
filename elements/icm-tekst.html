@@ -16,6 +16,7 @@
 		margin-bottom: 0px;
 		padding: 10px;
 		font-size: 16pt;
+		cursor: pointer;
 	}
 	.icon {
 		width: 24px;
@@ -50,7 +51,34 @@
 <script>
 
 if (1==2){//so never....
-core.project().data('location',{lat: 53.1, lon: 5.8, zoomlevel: 20}).sync();
+var project = core.projects({});
+core.project(project.id());
+core.project()
+	.data('location',{lat: 52.16, lon: 4.493, zoomlevel: 20})
+	.data('name','Brand in Leiden')
+	.sync(); 
+core.project().data('teams',[
+	{id: 1, name: 'Incident', boxes: [
+			{id: 1, type: 'text', name: 'Meldingen'}
+	]},
+	{id: 2, name: 'Team Populatie', boxes: [
+			{id: 2, type: 'text', name: 'Opdracht'},
+			{id: 1, type: 'text', name: 'Samenvatting'}
+	]},
+	{id: 3, name: 'Team Evacuatie', boxes: [
+			{id: 2, type: 'text', name: 'Opdracht'},
+			{id: 1, type: 'text', name: 'Samenvatting'}
+	]},
+	{id: 4, name: 'Team Afzetting', boxes: [
+			{id: 2, type: 'text', name: 'Opdracht'},
+			{id: 1, type: 'text', name: 'Samenvatting'}
+	]},
+	{id: 5, name: 'Team Brandweer', boxes: [
+			{id: 2, type: 'text', name: 'Opdracht'},
+			{id: 1, type: 'text', name: 'Samenvatting'}
+	]}
+]).sync();
+	
 core.project().data('teams',[
 	{id: 1, name: 'Meldingen', boxes: [
 		{id: 1, type: 'text', name: 'Acute meldingen'},

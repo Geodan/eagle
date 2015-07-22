@@ -14,6 +14,8 @@
 		padding-left: 10px;
 	}
     </style>
+    <h3>Current user:</h3>
+    <p>{{curuser._id}}<p>
     <h3>Online users:</h3>
     <template repeat="{{user,i in users}}">
     	<paper-shadow z=2><div class='user' val="{{i}}" on-click="{{toggle}}">{{user | name}}</div></paper-shadow>
@@ -45,17 +47,20 @@ Polymer({
 	created: function(){
 		this.users = [];
 		this.chats = [];
+		this.curuser = {};
 	},
 	domReady: function(){
 		var self = this;
 		var core = this.core;
 		
 		core.userStore().loaded.then(function(d){
+			
 			self.users = core.activeUsers();
 			self.offlineusers = core.users().filter(function(d){return !d.deleted();});
 		});
 		core.peerStore().on('datachange', function(d){
 			self.users = core.activeUsers();
+			self.curuser = core.user();
 			self.offlineusers = core.users().filter(function(d){return !d.deleted();});
 			if (core.project()){
 				self.chats = core.project().items().filter(function(d){return d.data('from') && d.data('to')});

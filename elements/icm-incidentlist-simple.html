@@ -1,0 +1,131 @@
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<polymer-element name="icm-incidentlist" attributes='core'>
+<template>
+    <style>
+    .incidentlist {
+    	overflow: auto;
+    	width: 600px;
+    }
+    .incident {
+    	margin-left: 100px;
+    	padding: 10px;
+    }
+    </style>
+    <h3>Kies uw incident</h3>
+    Actief - <paper-toggle-button id="archief"></paper-toggle-button> - Archief
+    
+    <div class='incidentlist' style="display:{{$.archief.checked?'none':'block'}}">
+	<template repeat="{{i,idx in incidents}}">
+		<div horizontal layout  class='incident' index="{{idx}}">
+			<paper-button raised flex value="{{i.id}}" on-click="{{select}}">{{i.name}} {{i.date}} </paper-button>
+			<paper-icon-button value="{{i.id}}" icon='archive' on-click='{{delete}}'></paper-icon-button>
+		</div>
+    </template>
+    </div>
+    
+    <div class='incidentlist' style="display:{{$.archief.checked?'block':'none'}}">
+    <template repeat="{{i,idx in deletedincidents}}">
+		<div horizontal layout class='incident' index="{{idx}}"> 
+			<paper-button raised flex value="{{i.id}}" on-click="{{select}}">{{i.name}} {{i.date}} </paper-button>
+			<paper-icon-button value="{{i.id}}" icon='restore' on-click='{{undelete}}'></paper-icon-button>
+		</div>
+	</template>
+    </div>
+    
+
+    <paper-dialog id="dialog" transition="core-transition-center">
+	  <p>Archiveren?</p>
+	  <paper-button dismissive on-click="{{cancel}}">Nee</paper-button>
+	  <paper-button affirmative on-click="{{affirm}}">Ja</paper-button>
+	</paper-dialog>
+    
+</template>
+
+<script>
+Polymer({
+	selectedid: null,
+	created: function(){
+		this.incidents = [];
+	},
+	domReady: function(){
+		var self = this;
+		var core = this.core;
+		function lastedit(d){
+			var items = d.items();
+			if (items.length > 0)
+				return new Date(_.max(items, function(x){ return x.updated(); }).updated()).toLocaleString();
+			else
+				return new Date(d.updated()).toLocaleString();
+		}
+		function makeitem(d){
+			return {
+				id: d.id(),
+				name:d.data('name') ? d.data('name'): 'unknown', 
+				status:d.data('status') ? d.data('status').name: 'unknown', 
+				date:new Date(d.created()).toLocaleString(),
+				type:d.data('type') ? d.data('type').title: 'unknown',
+				items:d.items().length,
+				lastedit:lastedit(d)
+			};
+		}
+		
+		function reload(){
+			self.incidents = [];
+			self.deletedincidents = [];
+			core.projects()
+				.filter(function(d){return !d.deleted() && d.data('name');})
+				.forEach(function(d){
+					self.incidents.push(makeitem(d));
+				});
+			core.projects()
+				.filter(function(d){return d.deleted() && d.data('name');})
+				.forEach(function(d){
+					self.deletedincidents.push(makeitem(d));
+				});
+		}
+		core.projectStore().loaded.then(function(d){
+			reload();
+		});
+		core.projectStore().on('datachange', function(d){
+			reload();
+		});
+	},
+	name: function(d){
+		return d.data('name');
+	},                      
+	date: function(d){
+		return new Date(d.created()).toLocaleString();
+	},
+	live: function(d){
+		if (d.data('type') && d.data('type').name == 'live') return true;
+	},
+	select: function(a,b,c){
+		this.core.project(c.getAttribute('value'));
+		this.fire('selected');
+	},
+	delete: function(a,b,c){
+		this.selectedid = c.getAttribute('value');
+		this.$.dialog.open();
+	},
+	affirm: function(){
+		core.projects(this.selectedid).deleted(true).sync();
+		this.$.dialog.close();
+	},
+	undelete: function(a,b,c){
+		core.projects(c.getAttribute('value')).deleted(false).sync();
+	},
+	cancel: function(){
+		this.$.dialog.close();
+	}
+	//selectedChanged: function(a,b,c){
+	//	if (this.selected){
+	//		this.core.project(this.selected.id.toString());
+	//		this.fire('selected');
+	//	}
+	//}
+});
+</script>
+</polymer-element>

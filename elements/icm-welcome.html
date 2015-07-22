@@ -1,0 +1,77 @@
+<polymer-element name="icm-welcome" attributes="core user">
+<template>
+    <style>
+    #header {
+    	padding: 10px;
+    }
+    .rol {
+    	width: 250px;
+    	display: inline-block;
+    	padding: 20px;
+    	cursor: pointer;
+    	border: 1px solid;
+    	margin: 5px;
+    }
+    </style>
+    <div id="header">
+    <h3>Welkom bij de crisismanagement workshop!</h3>
+    <p>Kies hieronder de rol die u gaat vervullen tijdens de workshop.</p>
+    </div>
+    <hr/>
+    <div>
+    <span value='populatie' on-click="{{login}}">
+        <div class="rol">
+        <h4>Populatie</h4>
+        <p>U gaat zich bezig houden met het in kaart brengen van de hoeveelheid mensen die in het rampgebied wonen en werken. </p>
+        <!--<p><img width="100%" src="../images/populatie.jpg"/></p>-->
+        </div>
+    </span>
+    <span value='evacuatie' on-click="{{login}}">
+    	<div class="rol">
+        <h4>Evacuatie</h4>
+        <p>U gaat zich bezig houden met het in kaart brengen van vluchtroutes voor mensen uit het rampgebied naar buiten het gebied.</p>
+        <!--<p><img width="100%" src="../images/evacuatie.jpg"/></p>-->
+        </div>
+    </span>
+
+    <span value='afzetting' on-click="{{login}}">
+        <div class="rol">
+        <h4>Opvang</h4>
+        <p>U gaat zich bezig houden met de locaties zoeken waar de evacuees kunnen worden opgevangen. </p>
+        <!--<p><img width="100%" src="../images/opvang.jpg" /></p>-->
+        </div>
+    </span>
+    <span value='brandweer' on-click="{{login}}">
+		<div class="rol">
+		<h4>Communicatie</h4>
+		<p>U gaat zorgen dat alle teams met elkaar blijven comminiceren en uiteindelijk geeft u een samenvatting aan de burgemeester.</p>
+		<!--<p><img width="100%" src="../images/communicatie.jpg"/></p>-->
+		</div>
+	</span>
+	</div>
+</template>
+
+<script>
+
+Polymer({
+	created: function(){
+	},
+	domReady: function(){
+		var core = this.core;
+	},
+	login: function(a,b,c){
+		var userid = c.getAttribute('value');
+		if (core.users(userid)){
+			core.user(userid);
+			core.user().data('name', userid).sync();
+		}
+		else {
+			core.users({_id: userid}).sync();
+			core.user(userid);
+			core.user().data('name', userid).sync();
+		}
+		this.user = core.user();
+	}
+});
+</script>
+</polymer-element>
