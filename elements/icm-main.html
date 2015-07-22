@@ -17,9 +17,8 @@
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
-<!-- disabled
+
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-cas.html">
--->
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-layercatalogus.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/gm-configreader.html">
 <link rel="import" href="../bower_components/geodan-polymer/elements/g-wmsreader.html">
@@ -31,7 +30,6 @@
 <link rel="import" href="../elements/icm-tekst.html">
 <link rel="import" href="../elements/icm-welcome.html">
 <link rel="import" href="../elements/icm-map.html">
-<!-- disabled
 <link rel="import" href="../elements/icm-drawmenu.html">
 <link rel="import" href="../elements/icm-plugin-natuurbrand.html">
 <link rel="import" href="../elements/icm-plugin-p2000.html">
@@ -39,7 +37,6 @@
 <link rel="import" href="../elements/icm-plugin-rws.html">
 <link rel="import" href="../elements/icm-plugin-tracker.html">
 <link rel="import" href="../elements/icm-plugin-video.html">
--->
 <polymer-element name="icm-main">
   <template>
   	<style>
@@ -225,7 +222,7 @@
 			icon="home" 
 			on-click="{{gohome}}"></paper-icon-button>
 	</div>
-	<div flex style="display:{{$.pages.selected==200?'block':'none'}}"><!--disabled-->
+	<div flex style="display:{{$.pages.selected==2?'block':'none'}}">
 		 <paper-icon-button id="idicon" 
 			icon="{{account.ID==undefined?'social:person-outline':'account-circle'}}" 
 			on-click="{{toggleLogin}}"></paper-icon-button>
@@ -235,7 +232,7 @@
 			on-click="{{toggleConnection}}"></paper-icon-button>
 	 </div>
 	 <div flex style="display:{{$.pages.selected>=2?'block':'none'}}">Uw rol:<i>{{user._id}}</i></div>
-	 <div style="display:{{$.pages.selected==200?'block':'none'}}"><!--disabled -->
+	 <div style="display:{{$.pages.selected==2?'block':'none'}}">
 		
 		 <paper-icon-button  
 			icon="social:whatshot" 

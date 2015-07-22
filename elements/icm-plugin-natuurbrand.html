@@ -218,7 +218,6 @@ Polymer({
 		this.super();
 		if (e.srcElement.checked){ //ON
 			this.map.$.drawmenu.setLayer(this.layer);
-			
 		}
 		else { //OFF, back to comm. layer
 			this.map.$.drawmenu.setLayer(this.map.$.communication.layer);

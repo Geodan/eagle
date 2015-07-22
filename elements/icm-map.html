@@ -74,6 +74,7 @@ g-zoommenu{
 <g-map id="mapelement" layers="{{layers}}" latitude="52.2" longitude="5.2" zoomlevel="20">
 		<g-maprasterlayer 
 			id="Mapbox"
+			name="Mapbox"
 			type="tms"
 			url="http://{s}.tiles.mapbox.com/v3/examples.map-i86nkdio/{z}/{x}/{y}.png"
 		></g-maprasterlayer>
@@ -139,6 +140,7 @@ Polymer({
 				style: {
 					fill: 'none',
 					stroke: 'blue',
+					'stroke-width': '2px'
 				}
 		}).addTo(this.map);
 		var t = 0;
@@ -149,7 +151,7 @@ Polymer({
 			l1.data = data.features;
 		});
 		//this.layers.push(l1);
-		
+		this.layers = this.map.layers;
 		
 		this.$.communication.addEventListener('editFeature', function(d){
 			var feat = d.detail;
