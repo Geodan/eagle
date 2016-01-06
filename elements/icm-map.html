@@ -76,8 +76,24 @@ g-zoommenu{
 			id="Mapbox"
 			name="Mapbox"
 			type="tms"
-			url="http://{s}.tiles.mapbox.com/v3/examples.map-i86nkdio/{z}/{x}/{y}.png"
+			url="http://{s}.tiles.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IlhHVkZmaW8ifQ.hAMX5hSW-QnTeRCMAy9A8Q"
 		></g-maprasterlayer>
+		<!--
+		<g-maprasterlayer 
+			id= 'Geography'
+			type= 'esri'
+			opacity=0.01
+			url= "http://egis3.lacounty.gov/arcgis/rest/services/Geography/simpleGeo/MapServer/export"
+			name='Geography'
+		></g-maprasterlayer>
+		<g-maprasterlayer 
+			id= 'Open space'
+			type= 'esri'
+			opacity=0.01
+			url= "http://egis3.lacounty.gov/arcgis/rest/services/PARKS/OpenSpace_Public/MapServer/export"
+			name='Open space'
+		></g-maprasterlayer>
+		-->
 		<g-mapvectorlayer id="communication" name="Communication" config="{{layerconfig}}"></g-mapvectorlayer>
 		<g-mapvectorlayer id="location" name="Search"></g-mapvectorlayer>
 </g-map>
@@ -132,7 +148,7 @@ Polymer({
 		this.layers.push(l);
 		*/
 		/* Geofort layers */
-		
+		/*
 		var l1 = new d3.mappu.VectorLayer('Overstroming', {
 				reproject: true,
 				visible: true,
@@ -151,6 +167,13 @@ Polymer({
 			l1.data = data.features;
 		});
 		//this.layers.push(l1);
+		*/
+		/* USC layers */
+		
+		
+		
+		
+		
 		this.layers = this.map.layers;
 		
 		this.$.communication.addEventListener('editFeature', function(d){
