@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "geodan-polymer": "https://github.com/tomvantilburg/geodan-polymer.git",
+    "geodanmaps-polymer": "https://github.com/tomvantilburg/geodanmaps-polymer.git",
     "proj4": "~2.3.5",
     "ogc-schemas": "~2.2.0",
     "w3c-schemas": "~1.1.0",

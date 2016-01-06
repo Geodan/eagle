@@ -121,6 +121,7 @@ Polymer({
 		var m = d3.map([], function(d) { return d.id; });
 		
 		if (map.mapdiv){
+			d3.mappu.VectorLayer('debug').addTo(map); //debug
 			this.spoorvakkenlayer = new d3.mappu.VectorLayer('spoor', {
 				reproject: false,
 				style: {
@@ -177,7 +178,7 @@ Polymer({
 				treinnummers = d3.map(data, function(d){return d.nummer;});
 			});
 			
-			var socket = new WebSocket("ws://192.168.24.15:9998",['connect']);
+			var socket = new WebSocket("ws://titania:9998",['connect']);
 			this.socket = socket;
 			socket.onopen = function(){
 				self.socketState = socket.readyState;
@@ -199,7 +200,8 @@ Polymer({
 				.domain([0, 40, 100,160])
 				.range(['gray', 'orange', 'red','purple']);
 			function doCircles(){
-				var circles = map.svg.select('#'+self.layer.id).selectAll('circle').data(m.values(), function(d){return d.id;});
+				var circles = map.svg.select('#'+self.layer.id).selectAll('circle')
+					.data(m.values(), function(d){return d.id;});
 				circles.enter().append('circle')
 					.attr('r',5)
 					.style('fill',function(d){
@@ -223,7 +225,8 @@ Polymer({
 				});
 				circles.exit().remove();
 			}
-			window.setInterval(doCircles,100);
+			
+			//window.setInterval(doCircles,1000);
 			//d3.timer(doCircles, 5 * 1000);
 			var counter = 0;
 			/* Prepare treindata as a geoJSON collection */
@@ -240,7 +243,7 @@ Polymer({
 					var newlocation = {
 						type: "Feature",
 						style: {
-							fill: color,
+							fill: 'none',
 							stroke: color
 						},
 						id: d.trackeeid,
@@ -257,7 +260,8 @@ Polymer({
 							//route: treinnummer ? treinnummer.route:'..',
 							//bijz: treinnummer ? treinnummer.bijz:'..'
 						},
-						geometry: {
+						geometry: JSON.parse(d.geom) || 
+						{
 								type: "Point",
 								coordinates: [
 									d.x,
@@ -275,7 +279,7 @@ Polymer({
 			
 				//collection.features.sort(function(a,b){return a.properties.number - b.properties.number;});
 						
-				//self.layer.addFeature(newlocation);
+				self.layer.addFeature(newlocation);
 				m.set(newlocation.id, newlocation);
 				counter++;
 				if (counter > 1000){

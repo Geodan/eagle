@@ -36,7 +36,7 @@
 <link rel="import" href="../elements/icm-plugin-rail.html">
 <link rel="import" href="../elements/icm-plugin-rws.html">
 <link rel="import" href="../elements/icm-plugin-tracker.html">
-<link rel="import" href="../elements/icm-plugin-video.html">
+
 <polymer-element name="icm-main">
   <template>
   	<style>
@@ -111,10 +111,7 @@
       	  display: block;
       	  width: 10%;
       }
-     icm-map {
-     	 display: block;
-     	 
-     }
+     
       icm-tekst {
       	  overflow: auto;
       	  display: block;
@@ -151,21 +148,20 @@
       	  	  display: none;
       	  }
       }
-      
      </style>
      
   <icm-core id="icmcore"></icm-core>
   
-  <paper-action-dialog  class="scrolling"  id="incidentcrud" transition="core-transition-left" heading="Nieuw incident" autoCloseDisabled>
+  <paper-action-dialog  id="incidentcrud" transition="core-transition-left" heading="Nieuw incident" autoCloseDisabled>
   	<icm-incidentcrud core="{{core}}"></icm-incidentcrud>
   	<paper-button affirmative  autofocus>Sluit</paper-button>
   </paper-action-dialog>
-  
+<!--  
   <paper-action-dialog  class="scrolling"  id="drawmenu" transition="core-transition-left" heading="Tekenen" autoCloseDisabled>
   	<icm-drawmenu map="{{map}}"></icm-drawmenu>
   	<paper-button affirmative  autofocus>Sluit</paper-button>
   </paper-action-dialog>
-  
+  -->
   
   <paper-action-dialog  class="scrolling"  id="NBPlugin" transition="core-transition-right" heading="Natuurbrandmodel" autoCloseDisabled>
   	<icm-plugin-natuurbrand core="{{core}}" map="{{$.map}}"></icm-plugin-natuurbrand>
@@ -189,11 +185,6 @@
   
   <paper-action-dialog  class="scrolling"  id="TrackerPlugin" transition="core-transition-right" heading="Tracker" autoCloseDisabled>
   	<icm-plugin-tracker core="{{core}}" map="{{$.map}}"></icm-plugin-rws>
-  	<paper-button affirmative  autofocus>Sluit</paper-button>
-  </paper-action-dialog>
-  
-  <paper-action-dialog  class="scrolling"  id="VideoPlugin" transition="core-transition-right" heading="Video" autoCloseDisabled>
-  	<icm-plugin-video core="{{core}}" map="{{$.map}}"></icm-plugin-video>
   	<paper-button affirmative  autofocus>Sluit</paper-button>
   </paper-action-dialog>
   
@@ -231,7 +222,7 @@
 			class="{{$.icmcore.connected?'connected':'disconnected'}}"
 			on-click="{{toggleConnection}}"></paper-icon-button>
 	 </div>
-	 <div flex style="display:{{$.pages.selected>=2?'block':'none'}}">Uw rol:<i>{{user._id}}</i></div>
+	 <div flex style="display:{{$.pages.selected>=2?'block':'none'}}">Youre role:<i>{{user._id}}</i></div>
 	 <div style="display:{{$.pages.selected==2?'block':'none'}}">
 		
 		 <paper-icon-button  
@@ -251,13 +242,11 @@
 		 <paper-icon-button  
 			icon="image:flare" 
 			on-click="{{toggleTrackerPlugin}}"></paper-icon-button>
-		 <paper-icon-button  
-			icon="image:flare" 
-			on-click="{{toggleVideoPlugin}}"></paper-icon-button>
+		<!--
 		 <paper-icon-button  
 			icon="trending-up" 
 			on-click="{{toggleDrawMenu}}"></paper-icon-button>
-		
+		-->
 		 <paper-icon-button  
 			icon="maps:layers" 
 			on-click="{{toggleLayerCatalog}}"></paper-icon-button>
@@ -280,9 +269,9 @@
 			</div>
 		</section>
 		<section id="page1">
-			<paper-shadow z=2>
+		  <paper-shadow z=2>
 			<icm-welcome core="{{core}}" user="{{user}}"></icm-welcome>
-			</paper-shadow>
+		  </paper-shadow>
 		</section>
 		<section id="page2">
 			<div cross-fade layout horizontal style="height:100%">
@@ -322,6 +311,9 @@ Polymer({
   },
   toggleIncidentcrud: function(){
   	  this.$.incidentcrud.toggle();
+  	  //TODO: dialog should resize automatically
+  	  this.$.incidentcrud.style.width = '800px'
+  	  this.$.incidentcrud.style.height = '800px'
   },
   toggleLogin: function() {
 		this.$.login.toggle();

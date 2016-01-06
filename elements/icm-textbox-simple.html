@@ -88,7 +88,7 @@
 <div class='header' style="color:{{dirty?'orange':'black'}}" on-mouseover="{{setSeen}}"><b>{{box.name}}</b>
 	<span horizontal layout>
 		<core-icon icon="av:new-releases" class="smallicon" style="display:{{recentlyChanged?'block':'none'}}"></core-icon>
-		<div style="display:{{itemtime?'block':'none'}}"><small>Bewerking om {{itemtime}} door: {{editor}}</small></div>
+		<div style="display:{{itemtime?'block':'none'}}"><small>Last edit at {{itemtime}} by: {{editor}}</small></div>
 	</span>
 </div>
 
@@ -122,7 +122,7 @@ this is a working concept but it can be written in a lot less complex way
 */
 Polymer({
 	name: null,
-	text: 'Klik hier om tekst toe te voegen...',
+	text: 'Add text here..',
 	dirty: false, //edited but not saved
 	recentlyChanged: false, //changed from outside since last view
 	editor: null,
@@ -268,7 +268,7 @@ Polymer({
 				.replace(/(^@|@)([a-z0-9]+)/gi,'@<span class="mention" on-click="{{talkTo}} value="$2">$2</span>'); //mentions
 		}
 		else {
-			return "Klik hier om text toe te voegen....";
+			return "Add your text here...";
 		}
 	}
 });

@@ -156,7 +156,7 @@ Polymer({
 						}
 					}]
 			}).addTo(map);
-			
+			/* Disabled on request by socket owner (issue #3)
 			//Using this socket without permission. Better to ask in future.
 			var socket = new WebSocket("ws://monitor.livep2000.nl/A/websocket");
 			this.socket = socket;
@@ -235,7 +235,7 @@ Polymer({
 				}	
 				self.locations.sort(function(a,b){return b.properties.spi - a.properties.spi});
 				self.layer.data = self.locations;
-			}
+			}*/
 		}	
 	}
 });
