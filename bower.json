@@ -20,17 +20,6 @@
     "tests"
   ],
   "dependencies": {
-    "geodan-polymer": "https://github.com/tomvantilburg/geodan-polymer.git",
-    "geodanmaps-polymer": "https://github.com/tomvantilburg/geodanmaps-polymer.git",
-    "proj4": "~2.3.5",
-    "ogc-schemas": "~2.2.0",
-    "w3c-schemas": "~1.1.0",
-    "jsonix": "~2.2.1",
-    "nvd3": "https://github.com/nvd3-community/nvd3.git#~1.7.1",
-    "terraformer": "~1.0.4",
-    "terraformer-wkt-parser": "~1.0.0"
-  },
-  "resolutions": {
-    "d3": ">=3.5.5"
+    "cow-elements": "https://github.com/GeodanElements/cow-elements.git"
   }
 }

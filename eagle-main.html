@@ -1,0 +1,48 @@
+<link rel="import" href="./bower_components/cow-elements/cow-core.html">
+<link rel="import" href="./bower_components/mappu-elements/mappu-map.html">
+<link rel="import" href="./bower_components/mappu-elements/mappu-zoombuttons.html">
+
+
+<dom-module id="eagle-main">
+    <style>
+    mappu-map {
+        position: absolute;
+        left:0px;
+        right: 0px;
+        top:0px;
+        bottom: 0px;
+    }
+    </style>
+    <template>
+        <cow-core id="cow_core" config="{{cowconfig}}" core="{{cowcore}}"></cow-core>
+        <cow-status id="cow_status" core="{{cowcore}}"></cow-status>
+        <cow-connector id="cow_connector"
+          core="{{cowcore}}"
+          ></cow-connector>
+        <mappu-map map="{{map}}"></mapu-map>
+        <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
+    </template>
+    </dom-module>
+
+<script>
+
+Polymer({
+    is: 'eagle-main',
+    properties: {
+
+    },
+    ready: function(){
+        this.cowconfig = {
+           url: 'websocket.geodan.nl/eagle',
+           port: 443,
+           protocol: 'wss',
+           dir: 'eagle',
+           key: 'eagle'
+        }
+    },
+    attached: function(){
+        this.map.resize();
+    }
+
+});
+</script>

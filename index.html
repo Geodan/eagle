@@ -1,82 +1,23 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    
-    <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
-    <link rel="import" href="bower_components/polymer/polymer.html">
-    
-	<script src="bower_components/proj4/dist/proj4.js"></script>
-    <script src="bower_components/d3/d3.js"></script>
-	<script src="bower_components/d3-plugins/geo/tile/tile.js"></script>
-    <script src="/sites/cow/lib/underscore/underscore-min.js"></script>
-    <script src="/sites/cow/dist/cow.js"></script>
+    <head>
+    	<meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+    	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-    <script src="../d3.mappu/dist/d3.mappu.js"></script><!-- latest mappu -->
-
-    <link rel="import" href="./elements/icm-main.html">
-    <link rel="stylesheet" href="bower_components/sortable-table/css/bootstrap.css" shim-shadowdom>
-
-    <style>
-    
-    body, html {
-      height: 100%;
-      margin: 0;
-    }
-  
-    body {
-      font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
-      margin: 0;
-    }
-    
-    icm-main {
-      width: 100%;
-      height: 100%;
-    }
-    
-    html /deep/   #P2000Plugin {
-	 right: 6px;
-	 top: 64px;
-	 bottom: 10px;
-	}
-	
-	html /deep/   #NBPlugin {
-	 right: 6px;
-	 top: 64px;
-	 bottom: 10px;
-	}
-	
-	html /deep/   #RailPlugin {
-	 right: 6px;
-	 top: 64px;
-	 bottom: 10px;
-	}
-	html /deep/  #WaterstandenPlugin {
-		right: 6px;
-		top: 64px;
-		bottom: 10px;
-	}
-	
-	html /deep/  #TrackerPlugin {
-		right: 6px;
-		top: 64px;
-		bottom: 10px;
-	}
-    
-	
-	
-    @media screen and (max-height: 400px) {
-      body {
-        font-size: 13px;
-      }
-    }
- 
-    </style>
- </head> 
- <body unresolved>
-	<icm-main></icm-main>
- <!-- move this to dialog<icm-header></icm-header>-->
- </body>
-
-	
+        <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+        <link rel="import" href="./eagle-main.html">
+        <style>
+        html, body {
+    	  height: 100%;
+    	  margin: 0;
+    	  background-color: #E5E5E5;
+    	  font-family: 'RobotoDraft', sans-serif;
+    	}
+        </style>
+    </head>
+    <body class="fullbleed layout vertical">
+	    <eagle-main></eagle-main>
+    </body>
 </html>
