@@ -1,9 +1,12 @@
 
 <link rel="import" href="./eagle-config.html">
 <link rel="import" href="./bower_components/polymer/polymer.html">
+<link rel="import" href="./bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="./bower_components/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="./bower_components/paper-item/paper-item.html">
 
 <link rel="import" href="./bower_components/cow-elements/cow-core.html">
+<link rel="import" href="./bower_components/cow-elements/cow-connector.html">
 
 <link rel="import" href="./bower_components/mappu-elements/mappu-map.html">
 <link rel="import" href="./bower_components/mappu-elements/mappu-zoombuttons.html">
@@ -12,10 +15,14 @@
 
 <link rel="import" href="./bower_components/gm-elements/gm-cas-core.html">
 <link rel="import" href="./bower_components/gm-elements/gm-cas-icon.html">
+<link rel="import" href="./bower_components/gm-elements/gm-docs-connector.html">
 
+<link rel="import" href="./gm-docs-text.html">
+<link rel="import" href="./gm-icm-text.html">
 <link rel="import" href="./swapp-incidentlist.html">
 
 <dom-module id="eagle-main">
+    <style include="iron-flex iron-flex-alignment">
     <style>
     mappu-map {
         position: absolute;
@@ -34,48 +41,89 @@
             ></eagle-config>
 
         <gm-cas-core id='cascore'
-    		account="{{account}}"
+    		account="{{casaccount}}"
     		loggedin="{{loggedin}}"
     		otap="{{otap}}"
     		></gm-cas-core>
+        <gm-docs-connector
+            account="[[casaccount]]"
+            otap="[[otap]]"
+            configs="{{gmconfigs}}"
+        ></gm-docs-connector>
+        <gm-docs-text
+            account="[[casaccount]]"
+            otap="[[otap]]"
+            configid="[[selectedcowprojectid]]"
+            config="{{gmcurrentconfig}}"
+        ></gm-docs-text>
 
-        <cow-core id="cow_core" config="{{cowconfig}}" core="{{cowcore}}"></cow-core>
+
+        <cow-core id="cow_core" config="[[cowconfig]]" core="{{cowcore}}"></cow-core>
         <cow-status id="cow_status" core="{{cowcore}}"></cow-status>
+        <cow-connector id="cow_connector"
+          core="[[cowcore]]"
+          account="[[casaccount]]"
+          selectedproject="[[selectedcowprojectid]]"
+          project="{{curcowproject}}"
+          projects="{{cowprojects}}"
+          textitems="{{textitems}}"
+          itemstore="{{itemstore}}"
+          activeuser="{{activeuser}}"
+          ></cow-connector>
+
         <swapp-core id="swapp_core"
             incidents={{swappincidents}}
             sort="{{sortincidents(sortval)}}"
             filter="{{filterincidents(jobtitleid)}}"
             ></swapp-core>
-        <cow-connector id="cow_connector"
-          core="{{cowcore}}"
-          ></cow-connector>
+
 
         <!-- UI -->
 
         <paper-drawer-panel>
             <div drawer>
-            
+
                 <gm-cas-icon
-                    account=[[account]]
+                    account=[[casaccount]]
                     loggedin=[[loggedin]]
                     ></gm-cas-icon>
+                <iron-selector attr-for-selected="name" selected="{{selectedcowprojectid}}">
+                <template is="dom-repeat" items=[[cowprojects]]>
+                    <paper-item name=[[item._id]]>
+                        <paper-item-body two-line>
+                            <div>[[item._data.name]]</div>
+                            <div secondary>[[_getDate(item._data.date)]]</div>
+                        </paper-item-body>
+                    </paper-item>
+                </template>
+                </iron-selector>
+                <!--
                 <swapp-incidentlist
                     incidents={{swappincidents}}
                     selectedincident={{swappcurincident}}
                 >
+                </swapp-incidentlist>
+                -->
             </div>
-            <div main>
-                content
+            <div main class='layout horizontal' style='height:100%'>
+                <div id="mapcolumn" class="flex" style='height:100%'>
+                    <mappu-map map="{{map}}" class='fit'></mappu-map>
+                    <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
+                </div>
+                <div id="textcolumn" style='width:50%;'>
+                    [[selectedcowprojectid]]
+                    <gm-icm-text
+                        config=[[gmcurrentconfig]]
+                        items=[[textitems]]
+                        store=[[itemstore]]
+                        activeuser=[[activeuser]]
+                        on-goto-location="gotolocation"
+
+                    ></gm-icm-text>
+                </div>
+
             </div>
         </paper-drawer-panel>
-
-
-        </swapp-incidentlist>
-
-        <!--
-        <mappu-map map="{{map}}"></mapu-map>
-        <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
-        -->
     </template>
     </dom-module>
 
@@ -93,6 +141,16 @@ Polymer({
         this.$.swapp_core.login({username:this.swappcredentials.username,password:this.swappcredentials.password});
         //this.map.resize();
     },
+    _getDate: function(date){
+        return new Date(date).toLocaleString();
+    },
+    _getContent: function(id){
+        var items = this.curcowproject.items().filter(d=>d.data('beeldonderdeel')==id);
+        if (items.length >0){
+            return items[0].data('beeldcontent');
+        }
+        return null;
+    }
 
 
 });
