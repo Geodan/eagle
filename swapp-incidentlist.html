@@ -1,0 +1,76 @@
+<link rel="import" href="./bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="./bower_components/paper-item/paper-item.html">
+<link rel="import" href="./bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="./bower_components/paper-item/paper-item-body.html">
+
+<dom-module id="swapp-incidentlist">
+    <style>
+    </style>
+    <template>
+
+<iron-selector id='projectselector'
+    attr-for-selected="name"
+    selected="{{selectedincident}}">
+    <template is="dom-repeat"
+        items='{{incidents}}'
+        >
+        <paper-icon-item class='incidentitem' name="{{item.incidentId}}">
+            <iron-icon item-icon src="http://localhost/swapp_server/api/incidentsymbol/incidentsymbol?symbol=s"></iron-icon>
+            <paper-item-body two-line>
+                <div><span>{{item.name}}</span> <paper-badge label="{{getopentasks(item)}}"></paper-badge></div>
+                <div secondary>{{_getDate(item.creationTimeDateTime)}}</div>
+            </paper-item-body>
+        </paper-icon-item>
+    </template>
+</iron-selector>
+</template>
+</dom-module>
+
+<script>
+
+Polymer({
+    is: 'swapp-incidentlist',
+    properties: {
+        incidents: {
+            type: Array
+        },
+        selectedincident: {
+            type: Number,
+            observer: '_selectedincidentChanged'
+
+        },
+        curincident: {
+            type: Object,
+            notify: true
+        }
+    },
+    ready: function(){
+    },
+    _selectedincidentChanged: function(id){
+
+    },
+    sortincidents: function(sortby){
+        switch (sortby){
+            case 'creationTimeDateTime':
+                return function(a,b){
+                    return new Date(b[sortby]).getTime() - new Date(a[sortby]).getTime();
+                }
+                break;
+            default:
+                return null;
+        }
+    },
+    filterincidents: function(jobtitleid){
+            return function(item){
+                return true;//TODO
+            }
+    },
+    getopentasks: function(item){
+        return item.taskCountByJobTitleId[this.jobtitleid]?item.taskCountByJobTitleId[this.jobtitleid].taskCountOpen:'';
+    },
+    _getDate: function(date){
+        var d = new Date(date);
+        return d.toLocaleString();
+    }
+});
+</script>

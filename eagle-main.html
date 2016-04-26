@@ -1,7 +1,19 @@
+
+<link rel="import" href="./eagle-config.html">
+<link rel="import" href="./bower_components/polymer/polymer.html">
+<link rel="import" href="./bower_components/paper-drawer-panel/paper-drawer-panel.html">
+
 <link rel="import" href="./bower_components/cow-elements/cow-core.html">
+
 <link rel="import" href="./bower_components/mappu-elements/mappu-map.html">
 <link rel="import" href="./bower_components/mappu-elements/mappu-zoombuttons.html">
 
+<link rel="import" href="./bower_components/swapp-elements/swapp-core.html">
+
+<link rel="import" href="./bower_components/gm-elements/gm-cas-core.html">
+<link rel="import" href="./bower_components/gm-elements/gm-cas-icon.html">
+
+<link rel="import" href="./swapp-incidentlist.html">
 
 <dom-module id="eagle-main">
     <style>
@@ -14,13 +26,56 @@
     }
     </style>
     <template>
+        <!-- NON UI -->
+        <eagle-config
+            otap={{otap}}
+            cowconfig={{cowconfig}}
+            swappcredentials={{swappcredentials}}
+            ></eagle-config>
+
+        <gm-cas-core id='cascore'
+    		account="{{account}}"
+    		loggedin="{{loggedin}}"
+    		otap="{{otap}}"
+    		></gm-cas-core>
+
         <cow-core id="cow_core" config="{{cowconfig}}" core="{{cowcore}}"></cow-core>
         <cow-status id="cow_status" core="{{cowcore}}"></cow-status>
+        <swapp-core id="swapp_core"
+            incidents={{swappincidents}}
+            sort="{{sortincidents(sortval)}}"
+            filter="{{filterincidents(jobtitleid)}}"
+            ></swapp-core>
         <cow-connector id="cow_connector"
           core="{{cowcore}}"
           ></cow-connector>
+
+        <!-- UI -->
+
+        <paper-drawer-panel>
+            <div drawer>
+            
+                <gm-cas-icon
+                    account=[[account]]
+                    loggedin=[[loggedin]]
+                    ></gm-cas-icon>
+                <swapp-incidentlist
+                    incidents={{swappincidents}}
+                    selectedincident={{swappcurincident}}
+                >
+            </div>
+            <div main>
+                content
+            </div>
+        </paper-drawer-panel>
+
+
+        </swapp-incidentlist>
+
+        <!--
         <mappu-map map="{{map}}"></mapu-map>
         <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
+        -->
     </template>
     </dom-module>
 
@@ -32,17 +87,13 @@ Polymer({
 
     },
     ready: function(){
-        this.cowconfig = {
-           url: 'websocket.geodan.nl/eagle',
-           port: 443,
-           protocol: 'wss',
-           dir: 'eagle',
-           key: 'eagle'
-        }
+
     },
     attached: function(){
-        this.map.resize();
-    }
+        this.$.swapp_core.login({username:this.swappcredentials.username,password:this.swappcredentials.password});
+        //this.map.resize();
+    },
+
 
 });
 </script>
