@@ -1,0 +1,98 @@
+<link rel="import" href="./bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="./bower_components/paper-input/paper-input.html">
+<link rel="import" href="./bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="./bower_components/paper-button/paper-button.html">
+<link rel="import" href="./bower_components/paper-item/paper-item.html">
+<link rel="import" href="./bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="./bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="./bower_components/paper-date-picker/paper-date-picker.html">
+<link rel="import" href="./bower_components/paper-time-picker/paper-time-picker.html">
+<link rel="import" href="./bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="./bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="./bower_components/iron-icons/notification-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/social-icons.html">
+
+<dom-module id="gm-icm-taskform">
+
+<template>
+<style>
+
+
+</style>
+
+<paper-dialog id='newtaskdialog' opened={{opened}}>
+	<h2>Nieuwe taak</h2>
+	<div>
+	<paper-input label="Naam" value={{name}}></paper-input>
+	<paper-textarea label="Beschrijving" value={{description}}></paper-textarea>
+	<div>
+		Eindtijd:
+		<paper-button toggles active="{{opendatedialog}}">[[_dateformat(duedate, 'LL')]]</paper-button>
+		<paper-button toggles active="{{opentimedialog}}">[[duetime]]</paper-button>
+	</div>
+
+	<paper-dropdown-menu label="Toewijzen aan">
+	  <paper-listbox class="dropdown-content" value={{assignee}}>
+		<template is='dom-repeat' items=[[views]]>
+			<paper-item>[[item.title]]</paper-item>
+		</template>
+	  </paper-listbox>
+	</paper-dropdown-menu>
+
+
+
+	<paper-dialog id="datedialog" opened="{{opendatedialog}}">
+		<paper-date-picker date={{duedate}}></paper-date-picker>
+		<div class="buttons">
+          <paper-button dialog-dismiss>Cancel</paper-button>
+          <paper-button dialog-confirm>OK</paper-button>
+        </div>
+      </paper-dialog>
+	</paper-dialog>
+	<paper-dialog id="timedialog"  opened="{{opentimedialog}}">
+		<paper-time-picker time={{duetime}}></paper-time-picker>
+		<div class="buttons">
+          <paper-button dialog-dismiss>Cancel</paper-button>
+          <paper-button dialog-confirm>OK</paper-button>
+        </div>
+      </paper-dialog>
+	</paper-dialog>
+</div>
+<div class="buttons">
+    <paper-button dialog-dismiss>Annuleren</paper-button>
+    <paper-button dialog-confirm on-click='_submitTask'>Aanmaken</paper-button>
+  </div>
+</paper-dialog>
+
+</template>
+</dom-module>
+
+<script>
+Polymer({
+    is: 'gm-icm-taskform',
+	properties: {
+		config: {
+			type: Object
+		},
+		store: {
+			type: Object
+		}
+	},
+	ready: function(){
+	},
+	domReady: function(){
+	},
+	_dateformat: function(date, format) {
+	   return moment(date).format(format);
+   },
+   _submitTask: function(){
+	   debugger;
+   }
+
+});
+</script>
+
+</polymer-element>

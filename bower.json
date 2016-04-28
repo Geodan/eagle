@@ -20,6 +20,8 @@
     "tests"
   ],
   "dependencies": {
-    "cow-elements": "https://github.com/GeodanElements/cow-elements.git"
+    "cow-elements": "https://github.com/GeodanElements/cow-elements.git",
+    "paper-date-picker": "polymer-paper-date-picker#^1.1.3",
+    "paper-time-picker": "^1.1.2"
   }
 }

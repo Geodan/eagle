@@ -3,7 +3,13 @@
 <link rel="import" href="./bower_components/polymer/polymer.html">
 <link rel="import" href="./bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="./bower_components/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="./bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="./bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="./bower_components/paper-item/paper-item.html">
+<link rel="import" href="./bower_components/paper-card/paper-card.html">
+<link rel="import" href="./bower_components/paper-button/paper-button.html">
+<link rel="import" href="./bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="./bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="./bower_components/cow-elements/cow-core.html">
 <link rel="import" href="./bower_components/cow-elements/cow-connector.html">
@@ -19,9 +25,11 @@
 
 <link rel="import" href="./gm-docs-text.html">
 <link rel="import" href="./gm-icm-text.html">
+<link rel="import" href="./gm-icm-taskform.html">
 <link rel="import" href="./swapp-incidentlist.html">
 
 <dom-module id="eagle-main">
+    <template>
     <style include="iron-flex iron-flex-alignment">
     <style>
     mappu-map {
@@ -31,8 +39,24 @@
         top:0px;
         bottom: 0px;
     }
+
+    paper-dialog {
+     position: fixed;
+     top: 20px;
+     left: 20px;
+     right: 20px;
+     overflow: auto;
+   }
+   #projectchooserdialog{
+       position: fixed;
+
+   }
+   #projectfab{
+       margin:5px;
+       background-color: grey;
+   }
+
     </style>
-    <template>
         <!-- NON UI -->
         <eagle-config
             otap={{otap}}
@@ -43,7 +67,7 @@
         <gm-cas-core id='cascore'
     		account="{{casaccount}}"
     		loggedin="{{loggedin}}"
-    		otap="{{otap}}"
+    		otap="[[otap]]"
     		></gm-cas-core>
         <gm-docs-connector
             account="[[casaccount]]"
@@ -80,23 +104,63 @@
 
         <!-- UI -->
 
-        <paper-drawer-panel>
-            <div drawer>
+        <paper-dialog id="projectchooserdialog" opened={{projectdialogopened}}>
+                <h2>Projecten</h2>
+                <paper-dialog-scrollable>
+                <iron-selector attr-for-selected="name" selected="{{selectedcowprojectid}}">
+                    <template is="dom-repeat" items=[[cowprojects]] sort='[[_datesort()]]'>
+                        <paper-item name="[[item._id]]" style='cursor:pointer;'>
+                            <paper-item-body two-line>
+                                <div>[[item._data.name]]</div>
+                                <div secondary>[[item._data.scenario.name]]</div>
+                            </paper-item-body>
+                            <paper-item-body>
+                                [[_getDate(item._data.date)]]
+                            </paper-item-body>
+                            <paper-item-body>
+                                [[item._data.status.name]]
+                            </paper-item-body>
+                            <paper-item-body>
+                                [[item._data.type.title]]
+                            </paper-item-body>
+                        </paper-item>
+                        <!--
+                        <paper-card name="[[item._id]]" heading="[[item._data.name]]">
+                          <div class="card-content">[[_getDate(item._data.date)]]</div>
+                          <div class="card-actions">
+                            <paper-button>Open</paper-button>
+                          </div>
+                        </paper-card>
+                        -->
+                    </template>
+                </iron-selector>
+            </paper-dialog-scrollable>
+        </paper-dialog>
 
+        <gm-icm-taskform id='newtaskdialog'
+            views=[[gmcurrentconfig]]
+            store=[[itemstore]]
+            opened={{opennewtask}}
+            ></gm-icm-taskform>
+
+        <paper-drawer-panel>
+            <div drawer class='layout vertical'>
                 <gm-cas-icon
                     account=[[casaccount]]
                     loggedin=[[loggedin]]
+                    otap="https://ontw.geodan.nl"
                     ></gm-cas-icon>
-                <iron-selector attr-for-selected="name" selected="{{selectedcowprojectid}}">
-                <template is="dom-repeat" items=[[cowprojects]]>
-                    <paper-item name=[[item._id]]>
-                        <paper-item-body two-line>
-                            <div>[[item._data.name]]</div>
-                            <div secondary>[[_getDate(item._data.date)]]</div>
-                        </paper-item-body>
-                    </paper-item>
-                </template>
                 </iron-selector>
+                <gm-icm-text
+                    class='flex'
+                    config=[[gmcurrentconfig]]
+                    items=[[textitems]]
+                    store=[[itemstore]]
+                    activeuser=[[activeuser]]
+                    selected-view={{selectedView}}
+                    on-goto-location="gotolocation"
+                    itemconfig="{{itemconfig}}"
+                ></gm-icm-text>
                 <!--
                 <swapp-incidentlist
                     incidents={{swappincidents}}
@@ -104,24 +168,40 @@
                 >
                 </swapp-incidentlist>
                 -->
+                <div>
+                    <paper-fab id="projectfab" icon="icons:folder" mini toggles active={{projectdialogopened}}></paper-fab>
+                </div>
             </div>
             <div main class='layout horizontal' style='height:100%'>
-                <div id="mapcolumn" class="flex" style='height:100%'>
-                    <mappu-map map="{{map}}" class='fit'></mappu-map>
-                    <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
+                <div id="mapcolumn" class="flex" style='height:100%;'>
+                    <mappu-map map="{{map}}" >
+                        <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
+                    </mappu-map>
+
                 </div>
                 <div id="textcolumn" style='width:50%;'>
-                    [[selectedcowprojectid]]
-                    <gm-icm-text
-                        config=[[gmcurrentconfig]]
-                        items=[[textitems]]
-                        store=[[itemstore]]
-                        activeuser=[[activeuser]]
-                        on-goto-location="gotolocation"
-
-                    ></gm-icm-text>
+                    <paper-toolbar>
+                        <div class="title">
+                            [[selectedView.title]]
+                        </div>
+                    </paper-toolbar>
+                    <template id="subviews" is="dom-repeat" items="{{selectedView.subviews}}" as="subview">
+            			<gm-icm-textbox
+            				itemconfig="{{itemconfig}}"
+            				subview="{{subview}}"
+            				viewid="[[selectedView.id]]"
+            				store="{{itemstore}}"
+            				activeuser="{{activeuser}}"
+            				on-said-hello="updateme"></gm-icm-textbox>
+            		</template>
+                    <paper-toolbar>
+                        <div class="title">Taken</div>
+                        <paper-icon-button icon="add" toggles active='{{opennewtask}}'></paper-icon-button>
+                    </paper-toolbar>
+                    <template id="tasks" is="dom-repeat" items="{{selectedView.tasks}}" as="task">
+                        <paper-item></paper-item>
+                    </template>
                 </div>
-
             </div>
         </paper-drawer-panel>
     </template>
@@ -132,14 +212,20 @@
 Polymer({
     is: 'eagle-main',
     properties: {
-
+        selectedcowprojectid: {
+            type: Number,
+            observer: '_selectedcowprojectidChanged'
+        }
     },
     ready: function(){
 
     },
     attached: function(){
         this.$.swapp_core.login({username:this.swappcredentials.username,password:this.swappcredentials.password});
-        //this.map.resize();
+        this.map.redraw();
+    },
+    _selectedcowprojectidChanged: function(){
+        this.$.projectchooserdialog.close();
     },
     _getDate: function(date){
         return new Date(date).toLocaleString();
@@ -150,7 +236,13 @@ Polymer({
             return items[0].data('beeldcontent');
         }
         return null;
+    },
+    _datesort: function(){
+        return function(a,b){
+            return new Date(b._data.date) - new Date(a._data.date);
+        }
     }
+
 
 
 });

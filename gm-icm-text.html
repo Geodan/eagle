@@ -1,5 +1,8 @@
 <link rel="import" href="./bower_components/paper-material/paper-material.html">
+<link rel="import" href="./bower_components/paper-item/paper-icon-item.html">
+
 <link rel="import" href="./bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="./bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="./bower_components/iron-icons/maps-icons.html">
 <link rel="import" href="./bower_components/iron-icons/av-icons.html">
 <link rel="import" href="./bower_components/iron-icons/editor-icons.html">
@@ -10,6 +13,8 @@
 <link rel="import" href="./gm-icm-textbox.html">
 
 <dom-module id="gm-icm-text">
+
+<template>
 <style>
 	.view {
 		background: white;
@@ -27,26 +32,38 @@
 
 
 </style>
-<template>
-<template is="dom-repeat" items="{{views}}" as="view">
-	<paper-material class='view' on-click="toggle" elevation="1">
-		{{view.title}}
-		<template is="dom-if" if="[[view.recentlyChanged]]">
-			<iron-icon icon="av:new-releases" class="icon"></iron-icon>
-		</template>
-	</paper-material>
-	<iron-collapse class='collapse-content' opened='[[view.opened]]' allowOverflow>
-		<template is="dom-repeat" items="{{view.subviews}}" as="subview">
-			<gm-icm-textbox
-				itemconfig="{{itemconfig}}"
-				subview="{{subview}}"
-				viewid="[[view.id]]"
-				store="{{store}}"
-				activeuser="{{activeuser}}"
-				on-said-hello="updateme"></gm-icm-textbox>
-		</template>
-	</iron-collapse>
-</template>
+<iron-selector on-tap="_itemSelected">
+	<template id="viewlist" is="dom-repeat" items="{{views}}" as="view">
+		<paper-icon-item style='cursor: pointer;'>
+			{{view.title}}
+			<template is="dom-if" if="[[view.recentlyChanged]]">
+				<iron-icon icon="av:new-releases" class="icon"></iron-icon>
+			</template>
+		</paper-icon-item>
+		<!--
+		<paper-material class='view' on-click="toggle" elevation="1">
+			{{view.title}}
+			<template is="dom-if" if="[[view.recentlyChanged]]">
+				<iron-icon icon="av:new-releases" class="icon"></iron-icon>
+			</template>
+		</paper-material>
+		-->
+		<!--Moved out of textbox-->
+		<!--
+		<iron-collapse class='collapse-content' opened='[[view.opened]]' allowOverflow>
+			<template is="dom-repeat" items="{{view.subviews}}" as="subview">
+				<gm-icm-textbox
+					itemconfig="{{itemconfig}}"
+					subview="{{subview}}"
+					viewid="[[view.id]]"
+					store="{{store}}"
+					activeuser="{{activeuser}}"
+					on-said-hello="updateme"></gm-icm-textbox>
+			</template>
+		</iron-collapse>
+		-->
+	</template>
+</iron-selector>
 </template>
 </dom-module>
 
@@ -70,7 +87,12 @@ Polymer({
 			type: Object,
 			value: function(){
 				return {view: 'beeld',subview:'beeldonderdeel',content: 'beeldcontent'}
-			}
+			},
+			notify: true
+		},
+		selectedView: {
+			type: Object,
+			notify: true
 		}
 	},
 	observers: [
@@ -82,10 +104,13 @@ Polymer({
 	domReady: function(){
 	},
 	toggle: function(e, b,c){
-		e.currentTarget.nextElementSibling.toggle();
+		//e.currentTarget.nextElementSibling.toggle();
 	},
 	updateme: function(a,b,c){
 		this.recentlyChanged = true;
+	},
+	_itemSelected: function(e,detail){
+		this.set('selectedView',this.$.viewlist.itemForElement(e.target));
 	},
 	_configChanged: function(config, items){
 		var self = this;
