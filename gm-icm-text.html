@@ -139,7 +139,8 @@ Polymer({
 			var view = {
 				opened: isopened(d),
 				title: d.title,
-				id: d.view,
+				id: d.id, //this was d.view,
+				viewid: d.view,
 				subviews: subviews,
 				recentlyChanged: false
 			};

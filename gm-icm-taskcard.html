@@ -1,0 +1,107 @@
+<link rel="import" href="./bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="./bower_components/paper-input/paper-input.html">
+<link rel="import" href="./bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="./bower_components/paper-button/paper-button.html">
+<link rel="import" href="./bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="./bower_components/paper-item/paper-item.html">
+<link rel="import" href="./bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="./bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="./bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="./bower_components/paper-date-picker/paper-date-picker.html">
+<link rel="import" href="./bower_components/paper-time-picker/paper-time-picker.html">
+<link rel="import" href="./bower_components/iron-form/iron-form.html">
+<link rel="import" href="./bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="./bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="./bower_components/iron-icons/notification-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/social-icons.html">
+<link rel="import" href="./bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<dom-module id="gm-icm-taskcard">
+
+<template>
+	<style include="iron-flex iron-flex-alignment"></style>
+<style>
+</style>
+<div class='layout horizontal'>
+	<paper-item>
+		<paper-checkbox id="donebox" on-change="_toggleDone" checked=[[done]]></paper-chechbox>
+		<paper-item-body two-line>
+			<div>[[name]]</div>
+			<div secondary>[[assigner]]</div>
+		</paper-item-body>
+	</paper-item>
+	<paper-item class='flex'>
+		<paper-item-body>
+			[[description]]
+		</paper-item-body>
+	</paper-item>
+	<paper-item>
+		<paper-item-body>
+			[[_dateformat(due, 'LL')]]
+			[[duetime]]
+		</paper-item-body>
+	</paper-item>
+	<template is='dom-if' if=[[mine]]>
+		<paper-icon-button icon="delete" on-click='_delete'></paper-icon-button>
+	</template>
+</div>
+</template>
+</dom-module>
+
+<script>
+Polymer({
+    is: 'gm-icm-taskcard',
+	properties: {
+		taskitem: {
+			type: Object
+		},
+		mine: {
+			type: Boolean
+		}
+	},
+	observers: [
+		'_taskChanged(taskitem._data.*)'
+	],
+	ready: function(){
+		var self = this;
+		this.taskitem.on('datachange',function(){
+			self._taskChanged();
+		});
+	},
+	domReady: function(){
+	},
+	_dateformat: function(date, format) {
+	   return moment(date).format(format);
+    },
+    get_assigner: function(id){
+		debugger;
+		this.views;
+	},
+	_dateformat: function(date, format) {
+	   return moment(date).format(format);
+   },
+   _toggleDone: function(event){
+	   var checked = this.$.donebox.checked;
+	   this.taskitem.data('done',checked).sync();
+   },
+   _delete: function(){
+	   this.taskitem.deleted(true).sync();
+   },
+   _taskChanged: function(){
+	   var taskitem = this.taskitem;
+	   this.name=taskitem.data('name');
+	   this.description=taskitem.data('description');
+	   this.done=taskitem.data('done');
+	   this.assigner= taskitem.data('assigner');
+	   this.assignee= taskitem.data('assignee');
+	   this.due=taskitem.data('due');
+	   this.duetime= taskitem.data('duetime');
+   }
+
+});
+</script>
+
+</polymer-element>

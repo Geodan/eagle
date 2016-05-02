@@ -13,6 +13,7 @@
 <link rel="import" href="./bower_components/iron-icons/social-icons.html">
 <link rel="import" href="./bower_components/paper-input/paper-textarea.html">
 <link rel="import" href="./bower_components/paper-button/paper-button.html">
+<link rel="import" href="./bower_components/marked-element/marked-element.html">
 
 <dom-module id="gm-icm-textbox">
 
@@ -80,6 +81,7 @@
 					<iron-icon icon="av:new-releases" class="smallicon"></iron-icon>
 				</template>
 			</div>
+
 			<template is="dom-if" if="[[editmode]]">
 				<div id="textedit">
 					<paper-textarea value="{{text}}"></paper-textarea>
@@ -94,7 +96,13 @@
 			<template is="dom-if" if="[[!editmode]]">
 				<!--<div id="textview" on-click="_startEdit" inner-h-t-m-lx="{{_decorate(text)}}"></div>-->
 			</template>
+			<!--
 			<div id="textview" style$="display:{{_display(editmode)}}" on-click="_startEdit"></div>
+			-->
+			<!-- TODO: working on marked element as a replacement for the html injection-->
+			<marked-element markdown="[[text]]">
+			  <div id="textview" class="markdown-html" style$="display:{{_display(editmode)}}" on-click="_startEdit"></div>
+			</marked-element>
 </template>
 </dom-module>
 
@@ -161,6 +169,7 @@ Polymer({
 			Difficult way of inserting HTML
 			Example from: http://jsbin.com/caxelo/edit?html,output
 		*/
+		/*
 		var domBind = document.createElement('template', 'dom-bind');
 		var doc = domBind.content.ownerDocument;
 		var elem = doc.createElement('div');
