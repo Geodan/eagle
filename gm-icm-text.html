@@ -34,12 +34,14 @@
 </style>
 <iron-selector on-tap="_itemSelected">
 	<template id="viewlist" is="dom-repeat" items="{{views}}" as="view">
-		<paper-icon-item style='cursor: pointer;'>
-			{{view.title}}
+		<paper-item style='cursor: pointer;'>
+			<paper-item-body>
+			[[view.title]]
+			</paper-item-body>
 			<template is="dom-if" if="[[view.recentlyChanged]]">
 				<iron-icon icon="av:new-releases" class="icon"></iron-icon>
 			</template>
-		</paper-icon-item>
+		</paper-item>
 		<!--
 		<paper-material class='view' on-click="toggle" elevation="1">
 			{{view.title}}

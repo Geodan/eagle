@@ -2,6 +2,7 @@
 <link rel="import" href="./eagle-config.html">
 <link rel="import" href="./bower_components/polymer/polymer.html">
 <link rel="import" href="./bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="./bower_components/iron-swipeable-container/iron-swipeable-container.html">
 <link rel="import" href="./bower_components/paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="./bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="./bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
@@ -56,6 +57,15 @@
        margin:5px;
        background-color: grey;
    }
+   /* If you want your things to swipe nicely, you might want to disable
+     * text selection on those elements. */
+    .swipe {
+      -moz-user-select: none;
+      -ms-user-select: none;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: default;
+    }
 
     </style>
         <!-- NON UI -->
@@ -139,7 +149,7 @@
             </paper-dialog-scrollable>
         </paper-dialog>
 
-        <gm-icm-taskform id='newtaskdialog'
+        <gm-icm-taskform  id='newtaskdialog'
             views=[[gmcurrentconfig]]
             selectedview=[[selectedView]]
             store=[[itemstore]]
@@ -212,12 +222,13 @@
                             <div class="title">Taken UIT</div>
                             <paper-icon-button icon="add" toggles active='{{opennewtask}}'></paper-icon-button>
                         </paper-toolbar>
-                        <template id="tasks" is="dom-repeat" items="{{taskitems}}" as="task" filter="{{tasksFromMe(selectedView.id)}}">
-                            <gm-icm-taskcard
-                                taskitem=[[task]]
-                                mine
-                                ></gm-icm-taskcard>
-                        </template>
+
+                            <template id="tasks" is="dom-repeat" items="{{taskitems}}" as="task" filter="{{tasksFromMe(selectedView.id)}}">
+                                <gm-icm-taskcard
+                                    taskitem=[[task]]
+                                    mine
+                                    ></gm-icm-taskcard>
+                            </template>
 
                     </template>
                 </div>
@@ -242,6 +253,9 @@ Polymer({
             var item = self.itemstore.records({});
             item.data(event.detail).data('type','task').sync();
         });
+        
+
+        this.projectdialogopened = true;
     },
     attached: function(){
         this.$.swapp_core.login({username:this.swappcredentials.username,password:this.swappcredentials.password});
