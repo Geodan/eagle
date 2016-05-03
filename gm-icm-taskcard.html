@@ -1,0 +1,173 @@
+<link rel="import" href="./bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="./bower_components/paper-input/paper-input.html">
+<link rel="import" href="./bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="./bower_components/paper-button/paper-button.html">
+<link rel="import" href="./bower_components/paper-badge/paper-badge.html">
+<link rel="import" href="./bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="./bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="./bower_components/paper-item/paper-item.html">
+<link rel="import" href="./bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="./bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="./bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="./bower_components/paper-date-picker/paper-date-picker.html">
+<link rel="import" href="./bower_components/paper-time-picker/paper-time-picker.html">
+<link rel="import" href="./bower_components/iron-swipeable-container/iron-swipeable-container.html">
+<link rel="import" href="./bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="./bower_components/iron-form/iron-form.html">
+<link rel="import" href="./bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="./bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="./bower_components/iron-icons/notification-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/social-icons.html">
+<link rel="import" href="./bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<dom-module id="gm-icm-taskcard">
+
+<template>
+	<style include="iron-flex iron-flex-alignment"></style>
+<style>
+iron-collapse {
+	background: rgba(225,225,230,0.4);
+	-webkit-box-shadow: inset 0px 2px 5px 0px rgba(161,161,161,0.62);
+	-moz-box-shadow: inset 0px 2px 5px 0px rgba(161,161,161,0.62);
+	box-shadow: inset 0px 2px 5px 0px rgba(161,161,161,0.62);
+	margin-left: 10px;
+	margin-right: 10px;
+	padding: 5px;
+}
+#sendCommentBtn {
+	color: orange;
+}
+#sendCommentBtn[disabled] {
+	color: grey;
+}
+
+.red {
+    --paper-badge-background: none;
+	--paper-badge-text-color: orange;
+  }
+  .swipe {
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+	cursor: default;
+  }
+
+  .itempart {
+	  padding: 5px;
+  }
+</style>
+<iron-swipeable-container>
+	<paper-item class='swipe layout horizontal' toggles active={{showcomments}} on-click='_toggleComments'>
+		<paper-icon-button id='commentbutton' icon="arrow-drop-down"></paper-icon-button>
+		<div class='itempart' id='name'>
+			<b>[[name]]</b>
+			<!--<div secondary>[[assigner]]</div>-->
+		</div>
+		<template is='dom-if' if=[[comments]]>
+			<paper-badge for="name" label="Comment" class="red"></paper-badge>
+		</template>
+		<div class='flex itempart' id='description'>
+			[[description]]
+		</div>
+		<div class='itempart'>
+			[[_dateformat(due, 'LL')]]
+			[[duetime]]
+		</div>
+		<div class='itempart'>
+			<paper-checkbox id="donebox" on-change="_toggleDone" checked=[[done]]></paper-chechbox>
+			<!--<template is='dom-if' if=[[mine]]>
+				<paper-icon-button icon="delete" on-click='_delete'></paper-icon-button>
+			</template>-->
+		</div>
+	</paper-item>
+
+	<iron-collapse opened=[[showcomments]]>
+	  <div class="collapse-content">
+		  <div class='layout horizontal'>
+			<paper-textarea id='comments' class='flex' label="Commentaar" value=[[comments]] on-input='_commentsChanged'></paper-textarea>
+			<paper-icon-button id='sendCommentBtn' disabled=[[!commentschanged]] icon='send' on-click='_addComment'></paper-icon-button>
+		</div>
+	  </div>
+	</iron-collapse>
+</iron-swipeable-container>
+</template>
+</dom-module>
+
+<script>
+Polymer({
+    is: 'gm-icm-taskcard',
+	properties: {
+		taskitem: {
+			type: Object
+		},
+		mine: {
+			type: Boolean
+		},
+		commentschanged: {
+			type: Boolean,
+			value: false
+		}
+	},
+	observers: [
+		'_taskChanged(taskitem._data.*)'
+	],
+	ready: function(){
+		var self = this;
+		this.taskitem.on('datachange',function(){
+			self._taskChanged();
+		});
+		this.addEventListener('iron-swipe', function(event){
+			if (event.detail.direction == 'right'){
+            	self.taskitem.deleted(true).sync();
+			}
+        });
+	},
+	domReady: function(){
+	},
+	_dateformat: function(date, format) {
+	   return moment(date).format(format);
+    },
+    get_assigner: function(id){
+		debugger;
+		this.views;
+	},
+	_dateformat: function(date, format) {
+	   return moment(date).format(format);
+   },
+   _toggleDone: function(event){
+	   var checked = this.$.donebox.checked;
+	   this.taskitem.data('done',checked).sync();
+   },
+   _delete: function(){
+	   this.taskitem.deleted(true).sync();
+   },
+   _commentsChanged: function(){
+	   this.commentschanged = true;
+   },
+   _addComment: function(){
+	   this.commentschanged = false;
+	   this.taskitem.data('comments',this.$.comments.value).sync();
+   },
+   _toggleComments: function(){
+	   this.$.commentbutton.icon = this.showcomments ? 'arrow-drop-up': 'arrow-drop-down';
+   },
+   _taskChanged: function(){
+	   var taskitem = this.taskitem;
+	   this.name=taskitem.data('name');
+	   this.description=taskitem.data('description');
+	   this.done=taskitem.data('done');
+	   this.assigner= taskitem.data('assigner');
+	   this.assignee= taskitem.data('assignee');
+	   this.due=taskitem.data('due');
+	   this.comments = taskitem.data('comments');
+	   this.duetime= taskitem.data('duetime');
+   }
+
+});
+</script>
+
+</polymer-element>

@@ -1,0 +1,133 @@
+<link rel="import" href="./bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="./bower_components/paper-input/paper-input.html">
+<link rel="import" href="./bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="./bower_components/paper-button/paper-button.html">
+<link rel="import" href="./bower_components/paper-item/paper-item.html">
+<link rel="import" href="./bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="./bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="./bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="./bower_components/paper-date-picker/paper-date-picker.html">
+<link rel="import" href="./bower_components/paper-time-picker/paper-time-picker.html">
+<link rel="import" href="./bower_components/iron-form/iron-form.html">
+<link rel="import" href="./bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="./bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="./bower_components/iron-icons/notification-icons.html">
+<link rel="import" href="./bower_components/iron-icons/av-icons.html">
+<link rel="import" href="./bower_components/iron-icons/social-icons.html">
+
+<dom-module id="gm-icm-taskform">
+
+<template>
+<style>
+
+
+</style>
+
+<paper-dialog id='newtaskdialog' opened={{opened}} modal>
+	<h2>Nieuwe taak</h2>
+	<form is="iron-form" method="get" action="/" id="taskform">
+		<paper-input label="Naam" name="name" required></paper-input>
+		<paper-textarea label="Beschrijving" name="description" required></paper-textarea>
+		<div>
+			Eindtijd:
+			<paper-button toggles  active="{{opendatedialog}}">[[_dateformat(duedate, 'LL')]]</paper-button>
+			<paper-button toggles active="{{opentimedialog}}">[[duetime]]</paper-button>
+			<input type="hidden" name="duedate" value=[[duedate]]></input>
+			<input type="hidden" name="duetime" value=[[duetime]]></input>
+		</div>
+
+		<paper-input disabled label="Toewijzen door" value=[[selectedview.title]]></paper-input>
+		<paper-dropdown-menu label="Toewijzen aan" name="xx" required>
+		  <paper-menu class="dropdown-content" attr-for-selected="value" selected="{{assignee}}">
+			<template is='dom-repeat' items=[[views]]>
+				<paper-item value=[[item.id]]>[[item.title]]</paper-item>
+			</template>
+		</paper-menu>
+		</paper-dropdown-menu>
+
+		<input type="hidden" name="assignee" value=[[assignee]]></input>
+		<input type="hidden" name="assigner" value=[[selectedview.id]]></input>
+
+
+		<paper-dialog id="datedialog" opened="{{opendatedialog}}">
+			<paper-date-picker date={{duedate}}></paper-date-picker>
+			<div class="buttons">
+	          <paper-button dialog-dismiss>Cancel</paper-button>
+	          <paper-button dialog-confirm>OK</paper-button>
+	        </div>
+	      </paper-dialog>
+		</paper-dialog>
+		<paper-dialog id="timedialog"  opened="{{opentimedialog}}">
+			<paper-time-picker time={{duetime}}></paper-time-picker>
+			<div class="buttons">
+	          <paper-button dialog-dismiss>Cancel</paper-button>
+	          <paper-button dialog-confirm>OK</paper-button>
+	        </div>
+	      </paper-dialog>
+		</paper-dialog>
+
+		<div class="buttons">
+		    <paper-button on-click='_reset'>Legen</paper-button>
+		    <paper-button on-click='_submit'>Aanmaken</paper-button>
+		</div>
+	</form>
+	<div class="buttons">
+      <paper-button dialog-dismiss on-click='_reset'>Sluiten</paper-button>
+	</div>
+</paper-dialog>
+
+</template>
+</dom-module>
+
+<script>
+Polymer({
+    is: 'gm-icm-taskform',
+	properties: {
+		config: {
+			type: Object
+		},
+		store: {
+			type: Object
+		},
+		selectedview: {
+			type: Object
+		}
+	},
+	ready: function(){
+		var self = this;
+		this.$.taskform.addEventListener('iron-form-submit', function(event) {
+			var formdata = event.detail;
+			/* A lot of work for getting the duedate right */
+			var hours =  parseInt(formdata.duetime.substr(0,2));
+			var minutes = parseInt(formdata.duetime.substr(3,2));
+			var ampm = formdata.duetime.substr(6,2);
+			if (ampm == 'PM'){
+				hours += 12;
+			}
+			var date = new Date(formdata.duedate);
+			date.setHours(hours);
+			date.setMinutes(minutes);
+			formdata.due = date.getTime();
+			self.fire('newtask',formdata);
+		});
+	},
+	domReady: function(){
+	},
+	_dateformat: function(date, format) {
+	   return moment(date).format(format);
+	},
+	_submit: function(event) {
+		var form = this.$.taskform;
+		form.submit();
+	},
+	_reset: function(event) {
+		var form = this.$.taskform;
+		form.reset();
+	}
+
+});
+</script>
+
+</polymer-element>
