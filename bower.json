@@ -25,6 +25,7 @@
     "paper-time-picker": "^1",
     "molecules": "PolymerElements/Molecules#^1",
     "gm-elements": "https://github.com/GeodanElements/gm-elements.git",
-    "mappu-elements": "https://github.com/GeodanElements/mappu-elements.git"
+    "mappu-elements": "https://github.com/GeodanElements/mappu-elements.git",
+    "swapp-elements": "https://github.com/GeodanElements/swapp-elements.git"
   }
 }

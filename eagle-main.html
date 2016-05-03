@@ -28,7 +28,7 @@
 <link rel="import" href="./gm-icm-text.html">
 <link rel="import" href="./gm-icm-taskform.html">
 <link rel="import" href="./gm-icm-taskcard.html">
-<link rel="import" href="./swapp-incidentlist.html">
+<!--<link rel="import" href="./swapp-incidentlist.html">-->
 
 <dom-module id="eagle-main">
     <template>
@@ -106,13 +106,13 @@
           itemstore="{{itemstore}}"
           activeuser="{{activeuser}}"
           ></cow-connector>
-
+<!--
         <swapp-core id="swapp_core"
             incidents={{swappincidents}}
             sort="{{sortincidents(sortval)}}"
             filter="{{filterincidents(jobtitleid)}}"
             ></swapp-core>
-
+-->
 
         <!-- UI -->
 
@@ -253,12 +253,12 @@ Polymer({
             var item = self.itemstore.records({});
             item.data(event.detail).data('type','task').sync();
         });
-        
+
 
         this.projectdialogopened = true;
     },
     attached: function(){
-        this.$.swapp_core.login({username:this.swappcredentials.username,password:this.swappcredentials.password});
+        //this.$.swapp_core.login({username:this.swappcredentials.username,password:this.swappcredentials.password});
         this.map.redraw();
     },
     _selectedcowprojectidChanged: function(){
