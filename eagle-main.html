@@ -10,6 +10,8 @@
 <link rel="import" href="./bower_components/paper-card/paper-card.html">
 <link rel="import" href="./bower_components/paper-button/paper-button.html">
 <link rel="import" href="./bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="./bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="./bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="./bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="./bower_components/cow-elements/cow-core.html">
@@ -161,7 +163,7 @@
                 <gm-cas-icon
                     account=[[casaccount]]
                     loggedin=[[loggedin]]
-                    otap="https://ontw.geodan.nl"
+                    otap="https://test.geodan.nl"
                     ></gm-cas-icon>
                 </iron-selector>
                 <gm-icm-text
@@ -185,52 +187,62 @@
                     <paper-fab id="projectfab" icon="icons:folder" mini toggles active={{projectdialogopened}}></paper-fab>
                 </div>
             </div>
-            <div main class='layout horizontal' style='height:100%'>
-                <div id="mapcolumn" class="flex" style='height:100%;'>
-                    <mappu-map map="{{map}}" >
-                        <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
-                    </mappu-map>
+            <div  main  style='height:100%'>
+                <paper-toolbar>
+                    <paper-tabs selected="1">
+                        <paper-tab on-click='_textonly'>Text</paper-tab>
+                        <paper-tab on-click='_mapandtext'>Split</paper-tab>
+                        <paper-tab on-click='_maponly'>Kaart</paper-tab>
 
-                </div>
-                <div id="textcolumn" style='width:50%;overflow: auto;'>
-                    <paper-toolbar>
-                        <div class="title">
-                            [[selectedView.title]]
-                        </div>
-                    </paper-toolbar>
-                    <template id="subviews" is="dom-repeat" items="{{selectedView.subviews}}" as="subview">
-            			<gm-icm-textbox
-            				itemconfig="{{itemconfig}}"
-            				subview="{{subview}}"
-            				viewid="[[selectedView.viewid]]"
-            				store="{{itemstore}}"
-            				activeuser="{{activeuser}}"
-            				on-said-hello="updateme"></gm-icm-textbox>
-            		</template>
-                    <template is='dom-if' if=[[selectedView.id]]>
+                    </paper-tabs>
+                </paper-toolbar>
+                <div id="mainpanel" class='layout horizontal' style='height:100%;'>
+                    <div id="mapcolumn" class="flex" style='height:100%;'>
+                        <mappu-map map="{{map}}" >
+                            <mappu-zoombuttons map="{{map}}"></mappu-zoombuttons>
+                        </mappu-map>
+                    </div>
 
+                    <div id="textcolumn" style='width:50%;overflow: auto;'>
                         <paper-toolbar>
-                            <div class="title">Taken IN</div>
+                            <div class="title">
+                                [[selectedView.title]]
+                            </div>
                         </paper-toolbar>
-                        <template id="tasks" is="dom-repeat" items="{{taskitems}}" as="task" filter="{{tasksForMe(selectedView.id)}}">
-                            <gm-icm-taskcard
-                                taskitem=[[task]]
-                                ></gm-icm-taskcard>
-                        </template>
+                        <template id="subviews" is="dom-repeat" items="{{selectedView.subviews}}" as="subview">
+                			<gm-icm-textbox
+                				itemconfig="{{itemconfig}}"
+                				subview="{{subview}}"
+                				viewid="[[selectedView.viewid]]"
+                				store="{{itemstore}}"
+                				activeuser="{{activeuser}}"
+                				on-said-hello="updateme"></gm-icm-textbox>
+                		</template>
+                        <template is='dom-if' if=[[selectedView.id]]>
 
-                        <paper-toolbar>
-                            <div class="title">Taken UIT</div>
-                            <paper-icon-button icon="add" toggles active='{{opennewtask}}'></paper-icon-button>
-                        </paper-toolbar>
-
-                            <template id="tasks" is="dom-repeat" items="{{taskitems}}" as="task" filter="{{tasksFromMe(selectedView.id)}}">
+                            <paper-toolbar>
+                                <div class="title">Taken IN</div>
+                            </paper-toolbar>
+                            <template id="tasks" is="dom-repeat" items="{{taskitems}}" as="task" filter="{{tasksForMe(selectedView.id)}}">
                                 <gm-icm-taskcard
                                     taskitem=[[task]]
-                                    mine
                                     ></gm-icm-taskcard>
                             </template>
 
-                    </template>
+                            <paper-toolbar>
+                                <div class="title">Taken UIT</div>
+                                <paper-icon-button icon="add" toggles active='{{opennewtask}}'></paper-icon-button>
+                            </paper-toolbar>
+
+                                <template id="tasks" is="dom-repeat" items="{{taskitems}}" as="task" filter="{{tasksFromMe(selectedView.id)}}">
+                                    <gm-icm-taskcard
+                                        taskitem=[[task]]
+                                        mine
+                                        ></gm-icm-taskcard>
+                                </template>
+
+                        </template>
+                    </div>
                 </div>
             </div>
         </paper-drawer-panel>
@@ -260,6 +272,27 @@ Polymer({
     attached: function(){
         //this.$.swapp_core.login({username:this.swappcredentials.username,password:this.swappcredentials.password});
         this.map.redraw();
+    },
+    _maponly: function(){
+        this.$.mapcolumn.style.width = "100%";
+        this.$.mapcolumn.style.display = "block";
+        this.$.textcolumn.style.width = "0%";
+        this.$.textcolumn.style.display = "none";
+        this.map.resize();
+    },
+    _textonly: function(){
+        this.$.mapcolumn.style.width = "0%";
+        this.$.mapcolumn.style.display = "none";
+        this.$.textcolumn.style.width = "100%";
+        this.$.textcolumn.style.display = "block";
+        this.map.resize();
+    },
+    _mapandtext: function(){
+        this.$.mapcolumn.style.width = "50%";
+        this.$.mapcolumn.style.display = "block";
+        this.$.textcolumn.style.width = "50%";
+        this.$.textcolumn.style.display = "block";
+        this.map.resize();
     },
     _selectedcowprojectidChanged: function(){
         this.$.projectchooserdialog.close();
